@@ -5,12 +5,16 @@
 
 
 ## Vida y partículas 
-Completamente en Español      
-Proyecto de estudio       
-Creado por Nicolás Donoso       
+Proyecto de estudio           
+Programado por Nicolás Donoso usando <a href='https://github.com/muinicomuiser/mui-js'>mui.js</a>     
+Completamente en Español          
 
 ## Descripción
-En proceso      
+En proceso        
+Habrá un conjunto de partículas de colores distintos.   
+Cada partícula será atraída o repelida por otras partículas según un conjunto de reglas que 
+definan cómo interactúan las partículas según sus colores.
+
 
 
 ## Proyectos creados con mui.js

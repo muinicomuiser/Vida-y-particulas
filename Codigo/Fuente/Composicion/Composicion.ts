@@ -10,6 +10,7 @@ import { Forma } from "../GeometriaPlana/Formas.js";
 import { Interaccion } from "../Interaccion/Interaccion.js";
 import { Renderizado } from "../Renderizado/Renderizado.js";
 import { Tiempo } from "./Tiempo.js";
+import { Restriccion } from "../mui.js";
 
 export class Composicion {
 
@@ -88,5 +89,17 @@ export class Composicion {
             requestAnimationFrame(funcionAnimar)
         }
         funcionAnimar()
+    }
+
+    bordesEntornoInfinitos(entorno: Entorno) {
+        this.cuerpos.forEach((cuerpo) => {
+            cuerpo.posicion = entorno.envolverBorde(cuerpo.posicion)
+        })
+    }
+
+    limitarVelocidad(magnitudVelMaxima: number) {
+        this.cuerpos.forEach((cuerpo) => {
+            cuerpo.velocidad = Restriccion.limitarVelocidad(cuerpo, magnitudVelMaxima)
+        })
     }
 }
