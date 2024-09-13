@@ -1,0 +1,14 @@
+{
+  "name": "mui.js",
+  "version": "1.1.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dist": "tsc && npx rollup build/main.js --file dist/mainDist.js --format iife",
+    "build": "rm -r build && tsc"
+  },
+  "author": "Nicolás Donoso Negrete",
+  "license": "MIT",
+  "description": "Vida artificial espontanea con interacción de partículas"
+}
