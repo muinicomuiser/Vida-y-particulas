@@ -1663,15 +1663,19 @@
     const RENDER = COMPO.render;
     COMPO.tamanoCanvas(1080, 1080);
     const ENTORNO = Entorno.crearEntornoCanvas(RENDER.canvas);
+    //COLORES
+    const ColorAzules = Renderizado.colorHSL(200, 100, 40);
+    const ColorRojas = Renderizado.colorHSL(10, 100, 40);
+    const ColorAmarillas = Renderizado.colorHSL(60, 100, 80);
     //PARTICULAS
     const RADIO_AZULES = 5;
-    const NUMERO_AZULES = 115;
+    const NUMERO_AZULES = 100;
     const RADIO_AMARILLAS = 5;
-    const NUMERO_AMARILLAS = 25;
+    const NUMERO_AMARILLAS = 240;
     const RADIO_ROJAS = 5;
-    const NUMERO_ROJAS = 25;
+    const NUMERO_ROJAS = 110;
     //PARTICULAS AMARILLAS
-    const COLOR_AMARILLAS = 'yellow';
+    const COLOR_AMARILLAS = ColorAmarillas;
     const ParticulasAmarillas = [];
     for (let i = 0; i < NUMERO_AMARILLAS; i++) {
         const AleatorioX = Matematica.aleatorioEntero(1, RENDER.anchoCanvas);
@@ -1684,7 +1688,7 @@
         ParticulasAmarillas.push(Amarilla);
     }
     //PARTICULAS ROJAS
-    const COLOR_ROJAS = 'red';
+    const COLOR_ROJAS = ColorRojas;
     const ParticulasRojas = [];
     for (let i = 0; i < NUMERO_ROJAS; i++) {
         const AleatorioX = Matematica.aleatorioEntero(1, RENDER.anchoCanvas);
@@ -1697,8 +1701,7 @@
         ParticulasRojas.push(Roja);
     }
     //PARTICULAS AZULES
-    const COLOR_AZULES = 'skyblue';
-    const ParticulasAzules = [];
+    const COLOR_AZULES = ColorAzules;
     for (let i = 0; i < NUMERO_AZULES; i++) {
         const AleatorioX = Matematica.aleatorioEntero(1, RENDER.anchoCanvas);
         const AleatorioY = Matematica.aleatorioEntero(1, RENDER.altoCanvas);
@@ -1707,23 +1710,17 @@
             colorRelleno: COLOR_AZULES,
             trazada: false,
         };
-        ParticulasAzules.push(Azul);
     }
     //MAGNITUD INTERACCIONES
-    const RojaRoja = -0.01;
-    const RojaAzul = 0.1;
-    const RojaAmarilla = 1;
-    const AzulAzul = 0.07;
-    const AzulRoja = -0.1;
-    const AzulAmarillo = 0.5;
-    const AmarilloAmarillo = 0.04;
-    const AmarilloAzul = -0.3;
-    const AmarilloRojo = -0.2;
+    const RojaRoja = -0.5;
+    const RojaAmarilla = 0.3;
+    const AmarilloAmarillo = 0.5;
+    const AmarilloRojo = -1;
     //FUNCIONES INTERACCIONES
-    const DINSTANCIA_INTERACCION = 200;
-    const DISTANCIA_REPELER_MISMO_COLOR = 40;
+    const DINSTANCIA_INTERACCION = 220;
+    const DISTANCIA_REPELER_MISMO_COLOR = 50;
     const MAGNITUD_REPELER_MISMO_COLOR = 0.5;
-    const MAGNITUD_VELOCIDAD_MAXIMA = 4;
+    const MAGNITUD_VELOCIDAD_MAXIMA = 2;
     //Reiniciar Aceleraciones
     function reiniciarAceleracion(...particulas) {
         particulas.forEach((particula) => particula.aceleracion = Vector.cero());
@@ -1759,32 +1756,43 @@
         }
     }
     //INTEGRACIÓN DE CUERPOS A COMPOSICIÓN
-    COMPO.agregarCuerpos(...ParticulasAmarillas, ...ParticulasRojas, ...ParticulasAzules);
+    COMPO.agregarCuerpos(...ParticulasAmarillas);
+    COMPO.agregarCuerpos(...ParticulasRojas);
+    // COMPO.agregarCuerpos(...ParticulasAzules)
+    COMPO.entorno = ENTORNO;
+    COMPO.entorno.agregarCuerposContenidos(...ParticulasAmarillas);
+    COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas);
+    // COMPO.entorno.agregarCuerposContenidos(...ParticulasAzules)
     //EJECUCIÓN DE INTERACCIONES
     function interaccionParticulas() {
-        reiniciarAceleracion(...ParticulasAmarillas, ...ParticulasRojas, ...ParticulasAzules);
+        reiniciarAceleracion(...ParticulasAmarillas);
+        reiniciarAceleracion(...ParticulasRojas);
+        // reiniciarAceleracion(...ParticulasAzules)
         //Mismo Color
         interaccionMismoColor(ParticulasAmarillas, AmarilloAmarillo, MAGNITUD_REPELER_MISMO_COLOR);
         interaccionMismoColor(ParticulasRojas, RojaRoja, MAGNITUD_REPELER_MISMO_COLOR);
-        interaccionMismoColor(ParticulasAzules, AzulAzul, MAGNITUD_REPELER_MISMO_COLOR);
+        // interaccionMismoColor(ParticulasAzules, AzulAzul, MAGNITUD_REPELER_MISMO_COLOR)
         //Distinto Color
         interaccionDinstintoColor(ParticulasAmarillas, ParticulasRojas, AmarilloRojo);
-        interaccionDinstintoColor(ParticulasAmarillas, ParticulasAzules, AmarilloAzul);
+        // interaccionDinstintoColor(ParticulasAmarillas, ParticulasAzules, AmarilloAzul)
         interaccionDinstintoColor(ParticulasRojas, ParticulasAmarillas, RojaAmarilla);
-        interaccionDinstintoColor(ParticulasRojas, ParticulasAzules, RojaAzul);
-        interaccionDinstintoColor(ParticulasAzules, ParticulasRojas, AzulRoja);
-        interaccionDinstintoColor(ParticulasAzules, ParticulasAmarillas, AzulAmarillo);
+        // interaccionDinstintoColor(ParticulasRojas, ParticulasAzules, RojaAzul)
+        // interaccionDinstintoColor(ParticulasAzules, ParticulasRojas, AzulRoja)
+        // interaccionDinstintoColor(ParticulasAzules, ParticulasAmarillas, AzulAmarillo)
     }
     //NUEVO CUADRO
     function nuevoCuadro() {
         RENDER.limpiarCanvas();
         interaccionParticulas();
         COMPO.actualizarMovimientoCuerpos();
-        COMPO.bordesEntornoInfinitos(ENTORNO);
+        // COMPO.bordesEntornoInfinitos(ENTORNO)
+        COMPO.entorno.rebotarConBorde();
         COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
         COMPO.contactoSimpleCuerpos();
         COMPO.renderizarCuerpos();
     }
+    //GRABAR
+    // Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
     //ANIMAR
     COMPO.animacion(() => {
         nuevoCuadro();

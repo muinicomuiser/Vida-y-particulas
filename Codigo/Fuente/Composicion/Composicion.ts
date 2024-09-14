@@ -10,7 +10,7 @@ import { Forma } from "../GeometriaPlana/Formas.js";
 import { Interaccion } from "../Interaccion/Interaccion.js";
 import { Renderizado } from "../Renderizado/Renderizado.js";
 import { Tiempo } from "./Tiempo.js";
-import { Restriccion } from "../mui.js";
+import { Restriccion } from "../Interaccion/Restriccion.js"
 
 export class Composicion {
 
