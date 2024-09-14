@@ -16,7 +16,6 @@ import { Geometria } from "../Utiles/Geometria.js";
 import { Dibujante } from "../Renderizado/Dibujante.js";
 import { OpcionesControlesCuerpo } from "./OpcionesControlesCuerpo.js";
 import { OpcionesCuerpo } from "./OpcionesCuerpo.js";
-import { OpcionesForma } from "../GeometriaPlana/OpcionesForma.js";
 //TAREAS
 //Una propiedad que defina si es necesario actualizar la posición y la rotación.
 //Un solo método para aplicar transformar y actualizar transformaciones
@@ -162,6 +161,19 @@ export class Cuerpo extends Forma {
         if (opciones.controlable != undefined) {
             this.controlable = opciones.controlable!
         }
+    }
+
+    /**Retorna una copia del cuerpo como un cuerpo nuevo.*/
+    public clonar(): Cuerpo {
+        const formaClonada: Forma = super.clonar();
+        const cuerpoClonado: Cuerpo = Cuerpo.cuerpoSegunForma(formaClonada);
+        cuerpoClonado.masa = this.masa;
+        cuerpoClonado.densidad = this.densidad;
+        cuerpoClonado.fijo = this.fijo;
+        cuerpoClonado.rotarSegunVelocidad = this.rotarSegunVelocidad;
+        cuerpoClonado.controlable = this.controlable;
+        return cuerpoClonado;
+
     }
 
     /**Suma la velocidad y la aceleración a la posición.*/

@@ -165,8 +165,8 @@ export class Dibujante {
         let origen: Punto = vector.origen;
         let extremo: Punto = { x: vector.origen.x + vector.x, y: vector.origen.y + vector.y };
         this.context.beginPath();
-        this.context.moveTo(origen.x, origen.y);
-        this.context.lineTo(extremo.x, extremo.y);
+        this.context.moveTo(Math.round(origen.x), Math.round(origen.y));
+        this.context.lineTo(Math.round(extremo.x), Math.round(extremo.y));
 
         this.context.lineWidth = this.estiloVector.grosorTrazo;
         this.context.globalAlpha = this.estiloForma.opacidad!;
@@ -191,7 +191,7 @@ export class Dibujante {
     */
     protected pathCircunferencia(forma: Forma): void {
         this.context.beginPath();
-        this.context.arc(forma.posicion.x, forma.posicion.y, forma.radioTransformado, 0, Geometria.DOS_PI);
+        this.context.arc(Math.round(forma.posicion.x), Math.round(forma.posicion.y), forma.radioTransformado, 0, Geometria.DOS_PI);
     }
 
 
@@ -200,9 +200,9 @@ export class Dibujante {
     */
     protected pathPoligono(forma: Forma) {
         this.context.beginPath();
-        this.context.moveTo(forma.verticesTransformados[0].x, forma.verticesTransformados[0].y);
+        this.context.moveTo(Math.round(forma.verticesTransformados[0].x), Math.round(forma.verticesTransformados[0].y));
         for (let vertice of forma.verticesTransformados) {
-            this.context.lineTo(vertice.x, vertice.y);
+            this.context.lineTo(Math.round(vertice.x), Math.round(vertice.y));
         }
         this.context.closePath();
     }
@@ -213,9 +213,9 @@ export class Dibujante {
     */
     protected pathLinea(forma: Forma) {
         this.context.beginPath();
-        this.context.moveTo(forma.verticesTransformados[0].x, forma.verticesTransformados[0].y);
+        this.context.moveTo(Math.round(forma.verticesTransformados[0].x), Math.round(forma.verticesTransformados[0].y));
         for (let vertice of forma.verticesTransformados) {
-            this.context.lineTo(vertice.x, vertice.y);
+            this.context.lineTo(Math.round(vertice.x), Math.round(vertice.y));
         }
     }
 }

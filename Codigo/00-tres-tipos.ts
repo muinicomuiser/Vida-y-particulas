@@ -7,15 +7,19 @@ COMPO.tamanoCanvas(1080, 1080);
 const ENTORNO: Entorno = Entorno.crearEntornoCanvas(RENDER.canvas)
 
 //COLORES
+const ColorAzules: string = Renderizado.colorHSL(200, 100, 40)
 const ColorRojas: string = Renderizado.colorHSL(0, 100, 40)
 const ColorAmarillas: string = Renderizado.colorHSL(60, 100, 90)
 
 //PARTICULAS
+const RADIO_AZULES: number = 6;
+const NUMERO_AZULES: number = 100;
+
 const RADIO_AMARILLAS: number = 6;
-const NUMERO_AMARILLAS: number = 150;
+const NUMERO_AMARILLAS: number = 100;
 
 const RADIO_ROJAS: number = 6;
-const NUMERO_ROJAS: number = 70;
+const NUMERO_ROJAS: number = 50;
 
 //PARTICULAS AMARILLAS
 const COLOR_AMARILLAS: string = ColorAmarillas
@@ -32,6 +36,7 @@ for (let i: number = 0; i < NUMERO_AMARILLAS; i++) {
 }
 
 //PARTICULAS ROJAS
+
 const COLOR_ROJAS: string = ColorRojas
 const ParticulasRojas: Cuerpo[] = []
 for (let i: number = 0; i < NUMERO_ROJAS; i++) {
@@ -45,13 +50,33 @@ for (let i: number = 0; i < NUMERO_ROJAS; i++) {
     ParticulasRojas.push(Roja);
 }
 
+//PARTICULAS AZULES
+
+const COLOR_AZULES: string = ColorAzules
+const ParticulasAzules: Cuerpo[] = []
+for (let i: number = 0; i < NUMERO_AZULES; i++) {
+    const AleatorioX: number = Matematica.aleatorioEntero(1, RENDER.anchoCanvas)
+    const AleatorioY: number = Matematica.aleatorioEntero(1, RENDER.altoCanvas)
+    const Azul: Cuerpo = Cuerpo.circunferencia(AleatorioX, AleatorioY, RADIO_AZULES);
+    Azul.estiloGrafico = {
+        colorRelleno: COLOR_AZULES,
+        trazada: false,
+    }
+    ParticulasAzules.push(Azul);
+}
 
 //MAGNITUD INTERACCIONES
-const RojaRoja: number = -0.6;
-const RojaAmarilla: number = 0.4;
+const RojaRoja: number = -0.5;
+const RojaAzul: number = 0.2;
+const RojaAmarilla: number = 0.3;
 
-const AmarilloAmarillo: number = 0.6;
-const AmarilloRojo: number = -1.1;
+const AzulAzul: number = 0.1;
+const AzulRoja: number = -0.1;
+const AzulAmarillo: number = 0.5;
+
+const AmarilloAmarillo: number = 0.5;
+const AmarilloAzul: number = 0.2;
+const AmarilloRojo: number = -1;
 
 //FUNCIONES INTERACCIONES
 const DINSTANCIA_INTERACCION: number = 250;
@@ -101,29 +126,36 @@ function interaccionDinstintoColor(ParticulasUno: Cuerpo[], ParticulasDos: Cuerp
 //INTEGRACIÓN DE CUERPOS A COMPOSICIÓN
 COMPO.agregarCuerpos(...ParticulasAmarillas,)
 COMPO.agregarCuerpos(...ParticulasRojas)
+// COMPO.agregarCuerpos(...ParticulasAzules)
 COMPO.entorno = ENTORNO;
 COMPO.entorno.agregarCuerposContenidos(...ParticulasAmarillas)
 COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas)
+// COMPO.entorno.agregarCuerposContenidos(...ParticulasAzules)
 
 //EJECUCIÓN DE INTERACCIONES
 function interaccionParticulas() {
     reiniciarAceleracion(...ParticulasAmarillas)
     reiniciarAceleracion(...ParticulasRojas)
+    // reiniciarAceleracion(...ParticulasAzules)
 
     //Mismo Color
     interaccionMismoColor(ParticulasAmarillas, AmarilloAmarillo, MAGNITUD_REPELER_MISMO_COLOR)
     interaccionMismoColor(ParticulasRojas, RojaRoja, MAGNITUD_REPELER_MISMO_COLOR)
+    // interaccionMismoColor(ParticulasAzules, AzulAzul, MAGNITUD_REPELER_MISMO_COLOR)
 
     //Distinto Color
     interaccionDinstintoColor(ParticulasAmarillas, ParticulasRojas, AmarilloRojo)
+    // interaccionDinstintoColor(ParticulasAmarillas, ParticulasAzules, AmarilloAzul)
     interaccionDinstintoColor(ParticulasRojas, ParticulasAmarillas, RojaAmarilla)
+    // interaccionDinstintoColor(ParticulasRojas, ParticulasAzules, RojaAzul)
+    // interaccionDinstintoColor(ParticulasAzules, ParticulasRojas, AzulRoja)
+    // interaccionDinstintoColor(ParticulasAzules, ParticulasAmarillas, AzulAmarillo)
 
 }
 
 //NUEVO CUADRO
-COMPO.tick = 40;
-COMPO.fps = 20;
 function nuevoCuadro() {
+
     RENDER.limpiarCanvas()
     interaccionParticulas()
     // COMPO.bordesEntornoInfinitos(ENTORNO)
@@ -133,28 +165,10 @@ function nuevoCuadro() {
     COMPO.actualizarMovimientoCuerpos()
     COMPO.renderizarCuerpos()
 }
-let tiempoActual: number = Date.now()
-interaccionParticulas()
-COMPO.entorno.rebotarConBorde()
-COMPO.contactoSimpleCuerpos()
-COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
-COMPO.actualizarMovimientoCuerpos()
-console.log(Date.now() - tiempoActual)
+
 //GRABAR
-Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
+// Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
 //ANIMAR
-COMPO.animacion(() => {
-    let tiempoActual: number = Date.now()
-    interaccionParticulas()
-    COMPO.entorno.rebotarConBorde()
-    COMPO.contactoSimpleCuerpos()
-    COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
-    COMPO.actualizarMovimientoCuerpos()
-    console.log(Date.now() - tiempoActual)
-}, () => {
-    RENDER.limpiarCanvas();
-    COMPO.renderizarCuerpos();
-}, false)
 // COMPO.animacion(() => {
 //     nuevoCuadro()
 // })

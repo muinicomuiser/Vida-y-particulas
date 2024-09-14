@@ -1,8 +1,9 @@
 import { Temporizador } from "./Temporizador.js";
 
 export class Tiempo {
-    private tiempoInicial?: number;
+    private _tiempoInicial: number = Date.now();
     private tiempoActual?: number;
+    private tiempoPrevio?: number;
     private temporizadores: Temporizador[] = []
 
     constructor() { }
@@ -12,16 +13,34 @@ export class Tiempo {
         return this.temporizadores.length;
     }
 
+    /**Retorna el momento en milisegundos de la instanciación de este objeto.*/
+    get tiempoInicial(): number {
+        return this._tiempoInicial;
+    }
+
+    /**Retorna el tiempo en milisegundos transcurrido desde la última vez que se consultó .delta.         
+     * Si no se lo ha consultado antes, retorna el tiempo transcurrido desde la instanciación del objeto Tiempo.        
+    */
+    get delta(): number {
+        if (!this.tiempoPrevio) {
+            this.tiempoPrevio = Date.now();
+        }
+        this.tiempoActual = Date.now();
+        let delta: number = this.tiempoActual - this.tiempoPrevio;
+        this.tiempoPrevio = this.tiempoActual;
+        return delta;
+    }
+
     /**Ejecuta una función un número determinado de veces por segundo.*/
     iterarPorSegundo(funcion: () => void, numeroIteraciones: number): void {
         const periodo: number = 1000 / numeroIteraciones;
-        if (!this.tiempoInicial) {
-            this.tiempoInicial = Date.now();
+        if (!this.tiempoPrevio) {
+            this.tiempoPrevio = Date.now();
         }
         this.tiempoActual = Date.now();
-        if (this.tiempoActual - this.tiempoInicial >= periodo) {
+        if (this.tiempoActual - this.tiempoPrevio >= periodo) {
             funcion();
-            this.tiempoInicial = this.tiempoActual;
+            this.tiempoPrevio = this.tiempoActual;
         }
     }
 

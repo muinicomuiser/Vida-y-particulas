@@ -25,6 +25,7 @@ export class Composicion {
     contenedores: Contenedor[] = [];
     entorno!: Entorno;
     fps: number = 60;
+    tick: number = 50;
     animar: boolean = true;
 
 
@@ -78,18 +79,35 @@ export class Composicion {
         this.render.renderizarFormas(this.formas)
     }
 
-    animacion(funcion: () => void): void {
-        let tiempo: Tiempo = new Tiempo()
-        const funcionAnimar = () => {
-            let fps: number = this.fps;
-            if (this.animar) {
-                tiempo.iterarPorSegundo(funcion, fps)
-            }
 
+    animacion(funcionCalcular: () => void, funcionRenderizar: () => void, ajustarFPS: boolean = true): void {
+        let tiempoCalculo: Tiempo = new Tiempo()
+        let tiempoFrame: Tiempo = new Tiempo()
+
+        const funcionAnimar = () => {
+            if (this.animar && ajustarFPS) {
+                tiempoCalculo.iterarPorSegundo(funcionCalcular, 1000 / this.tick)
+                tiempoFrame.iterarPorSegundo(funcionRenderizar, this.fps)
+            } else if (this.animar && !ajustarFPS) {
+                tiempoCalculo.iterarPorSegundo(funcionCalcular, 1000 / this.tick)
+                funcionRenderizar();
+            }
             requestAnimationFrame(funcionAnimar)
         }
         funcionAnimar()
     }
+    // animacion(funcion: () => void): void {
+    //     let tiempo: Tiempo = new Tiempo()
+    //     const funcionAnimar = () => {
+    //         let fps: number = this.fps;
+    //         if (this.animar) {
+    //             tiempo.iterarPorSegundo(funcion, fps)
+    //         }
+
+    //         requestAnimationFrame(funcionAnimar)
+    //     }
+    //     funcionAnimar()
+    // }
 
     bordesEntornoInfinitos(entorno: Entorno) {
         this.cuerpos.forEach((cuerpo) => {

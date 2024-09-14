@@ -84,7 +84,7 @@ export class Forma {
         return this._transformacion.escala;
     }
 
-    /**Retorna el arreglo de vértices sin transformaciones.*/
+    /**Retorna una copia del arreglo de vértices sin transformaciones.*/
     get vertices(): Vector[] {
         return Vector.clonarConjunto(this._vertices);
     }
@@ -334,6 +334,24 @@ export class Forma {
         this.verticesTransformadosAnteriores = Vector.clonarConjunto(this._verticesTransformados)
         this._verticesTransformados = this._transformacion.transformarConjuntoVectores(this._vertices);
         this.transformar = false;
+    }
+
+    /**Retorna una copia de la forma como una forma nueva.*/
+    public clonar(): Forma {
+        const clonForma: Forma = new Forma()
+        clonForma.vertices = this.vertices;
+        clonForma.transformacion = this.transformacion;
+        clonForma.lados = this.lados;
+        clonForma.radio = this.radio;
+        clonForma.tipo = this.tipo;
+        clonForma.colorRelleno = this.colorRelleno;
+        clonForma.colorTrazo = this.colorTrazo;
+        clonForma.rellenada = this.rellenada;
+        clonForma.trazada = this.trazada;
+        clonForma.grosorTrazo = this.grosorTrazo;
+        clonForma.opacidad = this.opacidad;
+        clonForma.iniciarTransformacion(this.posicion.x, this.posicion.y);
+        return clonForma;
     }
 
     /**Suma el ángulo ingresado al ángulo de rotación de la figura.*/
