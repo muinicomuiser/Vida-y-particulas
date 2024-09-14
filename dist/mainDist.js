@@ -60,6 +60,41 @@
         }
     }
 
+    /**Clase que permite capturar lo que se proyecte en un canvas. */
+    class Grabador {
+        constructor() { }
+        /**Graba la animación de un canvas en formato .avi y asocia la grabación a un link de descarga en el documento HTML.
+         * Permite definir la duración de la grabación, en milisegundos, el número de FPS y la id del <anchor> HTML que iniciará la descarga.
+         * Si no se define un elemento <anchor>, el método creará uno.
+         */
+        static grabarCanvas(canvas, milisegundos, fps, anchor) {
+            let chunks = [];
+            let videoStream = canvas.captureStream(fps);
+            let mediaRecorder = new MediaRecorder(videoStream);
+            mediaRecorder.ondataavailable = function (e) {
+                chunks.push(e.data);
+            };
+            mediaRecorder.start();
+            setTimeout(function () { mediaRecorder.stop(); }, milisegundos);
+            mediaRecorder.onstop = function (e) {
+                let blob = new Blob(chunks, { 'type': 'video/avi' });
+                chunks = [];
+                let videoURL = URL.createObjectURL(blob);
+                let link;
+                if (anchor) {
+                    link = document.getElementById(anchor);
+                }
+                else {
+                    link = document.createElement("a");
+                    link.style.color = 'skyblue';
+                    link.innerHTML = 'Descargar';
+                }
+                link.href = videoURL;
+                link.download = "Captura Canvas";
+            };
+        }
+    }
+
     //POR REVISAR
     class Vector {
         constructor(x, y) {
@@ -344,7 +379,7 @@
         get escala() {
             return this._transformacion.escala;
         }
-        /**Retorna el arreglo de vértices sin transformaciones.*/
+        /**Retorna una copia del arreglo de vértices sin transformaciones.*/
         get vertices() {
             return Vector.clonarConjunto(this._vertices);
         }
@@ -571,6 +606,23 @@
             this.verticesTransformadosAnteriores = Vector.clonarConjunto(this._verticesTransformados);
             this._verticesTransformados = this._transformacion.transformarConjuntoVectores(this._vertices);
             this.transformar = false;
+        }
+        /**Retorna una copia de la forma como una forma nueva.*/
+        clonar() {
+            const clonForma = new Forma();
+            clonForma.vertices = this.vertices;
+            clonForma.transformacion = this.transformacion;
+            clonForma.lados = this.lados;
+            clonForma.radio = this.radio;
+            clonForma.tipo = this.tipo;
+            clonForma.colorRelleno = this.colorRelleno;
+            clonForma.colorTrazo = this.colorTrazo;
+            clonForma.rellenada = this.rellenada;
+            clonForma.trazada = this.trazada;
+            clonForma.grosorTrazo = this.grosorTrazo;
+            clonForma.opacidad = this.opacidad;
+            clonForma.iniciarTransformacion(this.posicion.x, this.posicion.y);
+            return clonForma;
         }
         /**Suma el ángulo ingresado al ángulo de rotación de la figura.*/
         rotar(angulo) {
@@ -1102,6 +1154,17 @@
                 this.controlable = opciones.controlable;
             }
         }
+        /**Retorna una copia del cuerpo como un cuerpo nuevo.*/
+        clonar() {
+            const formaClonada = super.clonar();
+            const cuerpoClonado = Cuerpo.cuerpoSegunForma(formaClonada);
+            cuerpoClonado.masa = this.masa;
+            cuerpoClonado.densidad = this.densidad;
+            cuerpoClonado.fijo = this.fijo;
+            cuerpoClonado.rotarSegunVelocidad = this.rotarSegunVelocidad;
+            cuerpoClonado.controlable = this.controlable;
+            return cuerpoClonado;
+        }
         /**Suma la velocidad y la aceleración a la posición.*/
         mover() {
             if (!this.fijo) {
@@ -1387,8 +1450,8 @@
             let origen = vector.origen;
             let extremo = { x: vector.origen.x + vector.x, y: vector.origen.y + vector.y };
             this.context.beginPath();
-            this.context.moveTo(origen.x, origen.y);
-            this.context.lineTo(extremo.x, extremo.y);
+            this.context.moveTo(Math.round(origen.x), Math.round(origen.y));
+            this.context.lineTo(Math.round(extremo.x), Math.round(extremo.y));
             this.context.lineWidth = this.estiloVector.grosorTrazo;
             this.context.globalAlpha = this.estiloForma.opacidad;
             this.context.strokeStyle = this.estiloVector.color;
@@ -1408,16 +1471,16 @@
         */
         pathCircunferencia(forma) {
             this.context.beginPath();
-            this.context.arc(forma.posicion.x, forma.posicion.y, forma.radioTransformado, 0, Geometria.DOS_PI);
+            this.context.arc(Math.round(forma.posicion.x), Math.round(forma.posicion.y), forma.radioTransformado, 0, Geometria.DOS_PI);
         }
         /**Método interno.
         * Crea un recorrido para una forma con id "poligono". Registra líneas entre cada vértice del polígono.
         */
         pathPoligono(forma) {
             this.context.beginPath();
-            this.context.moveTo(forma.verticesTransformados[0].x, forma.verticesTransformados[0].y);
+            this.context.moveTo(Math.round(forma.verticesTransformados[0].x), Math.round(forma.verticesTransformados[0].y));
             for (let vertice of forma.verticesTransformados) {
-                this.context.lineTo(vertice.x, vertice.y);
+                this.context.lineTo(Math.round(vertice.x), Math.round(vertice.y));
             }
             this.context.closePath();
         }
@@ -1426,9 +1489,9 @@
         */
         pathLinea(forma) {
             this.context.beginPath();
-            this.context.moveTo(forma.verticesTransformados[0].x, forma.verticesTransformados[0].y);
+            this.context.moveTo(Math.round(forma.verticesTransformados[0].x), Math.round(forma.verticesTransformados[0].y));
             for (let vertice of forma.verticesTransformados) {
-                this.context.lineTo(vertice.x, vertice.y);
+                this.context.lineTo(Math.round(vertice.x), Math.round(vertice.y));
             }
         }
     }
@@ -1553,22 +1616,39 @@
 
     class Tiempo {
         constructor() {
+            this._tiempoInicial = Date.now();
             this.temporizadores = [];
         }
         /**Retorna el número de temporizadores activos.*/
         get numeroTemporizadores() {
             return this.temporizadores.length;
         }
+        /**Retorna el momento en milisegundos de la instanciación de este objeto.*/
+        get tiempoInicial() {
+            return this._tiempoInicial;
+        }
+        /**Retorna el tiempo en milisegundos transcurrido desde la última vez que se consultó .delta.
+         * Si no se lo ha consultado antes, retorna el tiempo transcurrido desde la instanciación del objeto Tiempo.
+        */
+        get delta() {
+            if (!this.tiempoPrevio) {
+                this.tiempoPrevio = Date.now();
+            }
+            this.tiempoActual = Date.now();
+            let delta = this.tiempoActual - this.tiempoPrevio;
+            this.tiempoPrevio = this.tiempoActual;
+            return delta;
+        }
         /**Ejecuta una función un número determinado de veces por segundo.*/
         iterarPorSegundo(funcion, numeroIteraciones) {
             const periodo = 1000 / numeroIteraciones;
-            if (!this.tiempoInicial) {
-                this.tiempoInicial = Date.now();
+            if (!this.tiempoPrevio) {
+                this.tiempoPrevio = Date.now();
             }
             this.tiempoActual = Date.now();
-            if (this.tiempoActual - this.tiempoInicial >= periodo) {
+            if (this.tiempoActual - this.tiempoPrevio >= periodo) {
                 funcion();
-                this.tiempoInicial = this.tiempoActual;
+                this.tiempoPrevio = this.tiempoActual;
             }
         }
         /**Crea un termporizador nuevo con la duración ingresada y lo agrega a la lista de temporizadores de la composición.*/
@@ -1596,6 +1676,7 @@
             this.formas = [];
             this.contenedores = [];
             this.fps = 60;
+            this.tick = 50;
             this.animar = true;
             this.render = Renderizado.crearPorIdCanvas(idCanvas);
         }
@@ -1636,17 +1717,33 @@
         renderizarFormas() {
             this.render.renderizarFormas(this.formas);
         }
-        animacion(funcion) {
-            let tiempo = new Tiempo();
+        animacion(funcionCalcular, funcionRenderizar, ajustarFPS = true) {
+            let tiempoCalculo = new Tiempo();
+            let tiempoFrame = new Tiempo();
             const funcionAnimar = () => {
-                let fps = this.fps;
-                if (this.animar) {
-                    tiempo.iterarPorSegundo(funcion, fps);
+                if (this.animar && ajustarFPS) {
+                    tiempoCalculo.iterarPorSegundo(funcionCalcular, 1000 / this.tick);
+                    tiempoFrame.iterarPorSegundo(funcionRenderizar, this.fps);
+                }
+                else if (this.animar && !ajustarFPS) {
+                    tiempoCalculo.iterarPorSegundo(funcionCalcular, 1000 / this.tick);
+                    funcionRenderizar();
                 }
                 requestAnimationFrame(funcionAnimar);
             };
             funcionAnimar();
         }
+        // animacion(funcion: () => void): void {
+        //     let tiempo: Tiempo = new Tiempo()
+        //     const funcionAnimar = () => {
+        //         let fps: number = this.fps;
+        //         if (this.animar) {
+        //             tiempo.iterarPorSegundo(funcion, fps)
+        //         }
+        //         requestAnimationFrame(funcionAnimar)
+        //     }
+        //     funcionAnimar()
+        // }
         bordesEntornoInfinitos(entorno) {
             this.cuerpos.forEach((cuerpo) => {
                 cuerpo.posicion = entorno.envolverBorde(cuerpo.posicion);
@@ -1664,16 +1761,13 @@
     COMPO.tamanoCanvas(1080, 1080);
     const ENTORNO = Entorno.crearEntornoCanvas(RENDER.canvas);
     //COLORES
-    const ColorAzules = Renderizado.colorHSL(200, 100, 40);
-    const ColorRojas = Renderizado.colorHSL(10, 100, 40);
-    const ColorAmarillas = Renderizado.colorHSL(60, 100, 80);
+    const ColorRojas = Renderizado.colorHSL(0, 100, 40);
+    const ColorAmarillas = Renderizado.colorHSL(60, 100, 90);
     //PARTICULAS
-    const RADIO_AZULES = 5;
-    const NUMERO_AZULES = 100;
-    const RADIO_AMARILLAS = 5;
-    const NUMERO_AMARILLAS = 240;
-    const RADIO_ROJAS = 5;
-    const NUMERO_ROJAS = 110;
+    const RADIO_AMARILLAS = 6;
+    const NUMERO_AMARILLAS = 150;
+    const RADIO_ROJAS = 6;
+    const NUMERO_ROJAS = 70;
     //PARTICULAS AMARILLAS
     const COLOR_AMARILLAS = ColorAmarillas;
     const ParticulasAmarillas = [];
@@ -1700,27 +1794,16 @@
         };
         ParticulasRojas.push(Roja);
     }
-    //PARTICULAS AZULES
-    const COLOR_AZULES = ColorAzules;
-    for (let i = 0; i < NUMERO_AZULES; i++) {
-        const AleatorioX = Matematica.aleatorioEntero(1, RENDER.anchoCanvas);
-        const AleatorioY = Matematica.aleatorioEntero(1, RENDER.altoCanvas);
-        const Azul = Cuerpo.circunferencia(AleatorioX, AleatorioY, RADIO_AZULES);
-        Azul.estiloGrafico = {
-            colorRelleno: COLOR_AZULES,
-            trazada: false,
-        };
-    }
     //MAGNITUD INTERACCIONES
-    const RojaRoja = -0.5;
-    const RojaAmarilla = 0.3;
-    const AmarilloAmarillo = 0.5;
-    const AmarilloRojo = -1;
+    const RojaRoja = -0.6;
+    const RojaAmarilla = 0.4;
+    const AmarilloAmarillo = 0.6;
+    const AmarilloRojo = -1.1;
     //FUNCIONES INTERACCIONES
-    const DINSTANCIA_INTERACCION = 220;
-    const DISTANCIA_REPELER_MISMO_COLOR = 50;
+    const DINSTANCIA_INTERACCION = 250;
+    const DISTANCIA_REPELER_MISMO_COLOR = 40;
     const MAGNITUD_REPELER_MISMO_COLOR = 0.5;
-    const MAGNITUD_VELOCIDAD_MAXIMA = 2;
+    const MAGNITUD_VELOCIDAD_MAXIMA = 1;
     //Reiniciar Aceleraciones
     function reiniciarAceleracion(...particulas) {
         particulas.forEach((particula) => particula.aceleracion = Vector.cero());
@@ -1758,44 +1841,47 @@
     //INTEGRACIÓN DE CUERPOS A COMPOSICIÓN
     COMPO.agregarCuerpos(...ParticulasAmarillas);
     COMPO.agregarCuerpos(...ParticulasRojas);
-    // COMPO.agregarCuerpos(...ParticulasAzules)
     COMPO.entorno = ENTORNO;
     COMPO.entorno.agregarCuerposContenidos(...ParticulasAmarillas);
     COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas);
-    // COMPO.entorno.agregarCuerposContenidos(...ParticulasAzules)
     //EJECUCIÓN DE INTERACCIONES
     function interaccionParticulas() {
         reiniciarAceleracion(...ParticulasAmarillas);
         reiniciarAceleracion(...ParticulasRojas);
-        // reiniciarAceleracion(...ParticulasAzules)
         //Mismo Color
         interaccionMismoColor(ParticulasAmarillas, AmarilloAmarillo, MAGNITUD_REPELER_MISMO_COLOR);
         interaccionMismoColor(ParticulasRojas, RojaRoja, MAGNITUD_REPELER_MISMO_COLOR);
-        // interaccionMismoColor(ParticulasAzules, AzulAzul, MAGNITUD_REPELER_MISMO_COLOR)
         //Distinto Color
         interaccionDinstintoColor(ParticulasAmarillas, ParticulasRojas, AmarilloRojo);
-        // interaccionDinstintoColor(ParticulasAmarillas, ParticulasAzules, AmarilloAzul)
         interaccionDinstintoColor(ParticulasRojas, ParticulasAmarillas, RojaAmarilla);
-        // interaccionDinstintoColor(ParticulasRojas, ParticulasAzules, RojaAzul)
-        // interaccionDinstintoColor(ParticulasAzules, ParticulasRojas, AzulRoja)
-        // interaccionDinstintoColor(ParticulasAzules, ParticulasAmarillas, AzulAmarillo)
     }
     //NUEVO CUADRO
-    function nuevoCuadro() {
-        RENDER.limpiarCanvas();
-        interaccionParticulas();
-        COMPO.actualizarMovimientoCuerpos();
-        // COMPO.bordesEntornoInfinitos(ENTORNO)
-        COMPO.entorno.rebotarConBorde();
-        COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
-        COMPO.contactoSimpleCuerpos();
-        COMPO.renderizarCuerpos();
-    }
+    COMPO.tick = 40;
+    COMPO.fps = 20;
+    let tiempoActual = Date.now();
+    interaccionParticulas();
+    COMPO.entorno.rebotarConBorde();
+    COMPO.contactoSimpleCuerpos();
+    COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
+    COMPO.actualizarMovimientoCuerpos();
+    console.log(Date.now() - tiempoActual);
     //GRABAR
-    // Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
+    Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga');
     //ANIMAR
     COMPO.animacion(() => {
-        nuevoCuadro();
-    });
+        let tiempoActual = Date.now();
+        interaccionParticulas();
+        COMPO.entorno.rebotarConBorde();
+        COMPO.contactoSimpleCuerpos();
+        COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
+        COMPO.actualizarMovimientoCuerpos();
+        console.log(Date.now() - tiempoActual);
+    }, () => {
+        RENDER.limpiarCanvas();
+        COMPO.renderizarCuerpos();
+    }, false);
+    // COMPO.animacion(() => {
+    //     nuevoCuadro()
+    // })
 
 })();
