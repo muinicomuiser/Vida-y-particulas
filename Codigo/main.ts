@@ -1,4 +1,4 @@
-import { Composicion, Cuerpo, Entorno, Fuerza, Geometria, Matematica, Renderizado, Vector } from "./Fuente/mui.js";
+import { Composicion, Cuerpo, Entorno, Fuerza, Geometria, Grabador, Matematica, Renderizado, Vector } from "./Fuente/mui.js";
 
 const COMPO: Composicion = new Composicion('canvas');
 const RENDER: Renderizado = COMPO.render;
@@ -6,18 +6,23 @@ COMPO.tamanoCanvas(1080, 1080);
 
 const ENTORNO: Entorno = Entorno.crearEntornoCanvas(RENDER.canvas)
 
+//COLORES
+const ColorAzules: string = Renderizado.colorHSL(200, 100, 40)
+const ColorRojas: string = Renderizado.colorHSL(10, 100, 40)
+const ColorAmarillas: string = Renderizado.colorHSL(60, 100, 80)
+
 //PARTICULAS
 const RADIO_AZULES: number = 5;
-const NUMERO_AZULES: number = 115;
+const NUMERO_AZULES: number = 100;
 
 const RADIO_AMARILLAS: number = 5;
-const NUMERO_AMARILLAS: number = 25;
+const NUMERO_AMARILLAS: number = 240;
 
 const RADIO_ROJAS: number = 5;
-const NUMERO_ROJAS: number = 25;
+const NUMERO_ROJAS: number = 110;
 
 //PARTICULAS AMARILLAS
-const COLOR_AMARILLAS: string = 'yellow'
+const COLOR_AMARILLAS: string = ColorAmarillas
 const ParticulasAmarillas: Cuerpo[] = []
 for (let i: number = 0; i < NUMERO_AMARILLAS; i++) {
     const AleatorioX: number = Matematica.aleatorioEntero(1, RENDER.anchoCanvas)
@@ -32,7 +37,7 @@ for (let i: number = 0; i < NUMERO_AMARILLAS; i++) {
 
 //PARTICULAS ROJAS
 
-const COLOR_ROJAS: string = 'red'
+const COLOR_ROJAS: string = ColorRojas
 const ParticulasRojas: Cuerpo[] = []
 for (let i: number = 0; i < NUMERO_ROJAS; i++) {
     const AleatorioX: number = Matematica.aleatorioEntero(1, RENDER.anchoCanvas)
@@ -47,7 +52,7 @@ for (let i: number = 0; i < NUMERO_ROJAS; i++) {
 
 //PARTICULAS AZULES
 
-const COLOR_AZULES: string = 'skyblue'
+const COLOR_AZULES: string = ColorAzules
 const ParticulasAzules: Cuerpo[] = []
 for (let i: number = 0; i < NUMERO_AZULES; i++) {
     const AleatorioX: number = Matematica.aleatorioEntero(1, RENDER.anchoCanvas)
@@ -61,21 +66,23 @@ for (let i: number = 0; i < NUMERO_AZULES; i++) {
 }
 
 //MAGNITUD INTERACCIONES
-const RojaRoja: number = -0.01;
-const RojaAzul: number = 0.1;
-const RojaAmarilla: number = 1;
-const AzulAzul: number = 0.07;
+const RojaRoja: number = -0.5;
+const RojaAzul: number = 0.2;
+const RojaAmarilla: number = 0.3;
+
+const AzulAzul: number = 0.1;
 const AzulRoja: number = -0.1;
 const AzulAmarillo: number = 0.5;
-const AmarilloAmarillo: number = 0.04;
-const AmarilloAzul: number = -0.3;
-const AmarilloRojo: number = -0.2;
+
+const AmarilloAmarillo: number = 0.5;
+const AmarilloAzul: number = 0.2;
+const AmarilloRojo: number = -1;
 
 //FUNCIONES INTERACCIONES
-const DINSTANCIA_INTERACCION: number = 200;
-const DISTANCIA_REPELER_MISMO_COLOR: number = 40;
+const DINSTANCIA_INTERACCION: number = 220;
+const DISTANCIA_REPELER_MISMO_COLOR: number = 50;
 const MAGNITUD_REPELER_MISMO_COLOR: number = 0.5
-const MAGNITUD_VELOCIDAD_MAXIMA: number = 4;
+const MAGNITUD_VELOCIDAD_MAXIMA: number = 2;
 
 //Reiniciar Aceleraciones
 function reiniciarAceleracion(...particulas: Cuerpo[]) {
@@ -117,24 +124,32 @@ function interaccionDinstintoColor(ParticulasUno: Cuerpo[], ParticulasDos: Cuerp
 
 
 //INTEGRACIÓN DE CUERPOS A COMPOSICIÓN
-COMPO.agregarCuerpos(...ParticulasAmarillas, ...ParticulasRojas, ...ParticulasAzules)
+COMPO.agregarCuerpos(...ParticulasAmarillas,)
+COMPO.agregarCuerpos(...ParticulasRojas)
+// COMPO.agregarCuerpos(...ParticulasAzules)
+COMPO.entorno = ENTORNO;
+COMPO.entorno.agregarCuerposContenidos(...ParticulasAmarillas)
+COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas)
+// COMPO.entorno.agregarCuerposContenidos(...ParticulasAzules)
 
 //EJECUCIÓN DE INTERACCIONES
 function interaccionParticulas() {
-    reiniciarAceleracion(...ParticulasAmarillas, ...ParticulasRojas, ...ParticulasAzules)
+    reiniciarAceleracion(...ParticulasAmarillas)
+    reiniciarAceleracion(...ParticulasRojas)
+    // reiniciarAceleracion(...ParticulasAzules)
 
     //Mismo Color
     interaccionMismoColor(ParticulasAmarillas, AmarilloAmarillo, MAGNITUD_REPELER_MISMO_COLOR)
     interaccionMismoColor(ParticulasRojas, RojaRoja, MAGNITUD_REPELER_MISMO_COLOR)
-    interaccionMismoColor(ParticulasAzules, AzulAzul, MAGNITUD_REPELER_MISMO_COLOR)
+    // interaccionMismoColor(ParticulasAzules, AzulAzul, MAGNITUD_REPELER_MISMO_COLOR)
 
     //Distinto Color
     interaccionDinstintoColor(ParticulasAmarillas, ParticulasRojas, AmarilloRojo)
-    interaccionDinstintoColor(ParticulasAmarillas, ParticulasAzules, AmarilloAzul)
+    // interaccionDinstintoColor(ParticulasAmarillas, ParticulasAzules, AmarilloAzul)
     interaccionDinstintoColor(ParticulasRojas, ParticulasAmarillas, RojaAmarilla)
-    interaccionDinstintoColor(ParticulasRojas, ParticulasAzules, RojaAzul)
-    interaccionDinstintoColor(ParticulasAzules, ParticulasRojas, AzulRoja)
-    interaccionDinstintoColor(ParticulasAzules, ParticulasAmarillas, AzulAmarillo)
+    // interaccionDinstintoColor(ParticulasRojas, ParticulasAzules, RojaAzul)
+    // interaccionDinstintoColor(ParticulasAzules, ParticulasRojas, AzulRoja)
+    // interaccionDinstintoColor(ParticulasAzules, ParticulasAmarillas, AzulAmarillo)
 
 }
 
@@ -144,12 +159,15 @@ function nuevoCuadro() {
     RENDER.limpiarCanvas()
     interaccionParticulas()
     COMPO.actualizarMovimientoCuerpos()
-    COMPO.bordesEntornoInfinitos(ENTORNO)
+    // COMPO.bordesEntornoInfinitos(ENTORNO)
+    COMPO.entorno.rebotarConBorde()
     COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
     COMPO.contactoSimpleCuerpos()
     COMPO.renderizarCuerpos()
 }
 
+//GRABAR
+// Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
 //ANIMAR
 COMPO.animacion(() => {
     nuevoCuadro()
