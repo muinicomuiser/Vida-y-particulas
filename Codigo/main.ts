@@ -140,8 +140,12 @@ COMPO.contactoSimpleCuerpos()
 COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
 COMPO.actualizarMovimientoCuerpos()
 console.log(Date.now() - tiempoActual)
+
+
 //GRABAR
-Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
+// Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
+
+
 //ANIMAR
 COMPO.animacion(() => {
     let tiempoActual: number = Date.now()
