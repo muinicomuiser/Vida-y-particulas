@@ -16,10 +16,10 @@ export class Celda {
         this.estado = estado;
     }
 
-    get x(): number {
+    get columna(): number {
         return this.posicion.x;
     }
-    get y(): number {
+    get fila(): number {
         return this.posicion.y;
     }
 
@@ -30,6 +30,7 @@ export class Celda {
         return Vector.crear(-this.distanciaVecindad, this.distanciaVecindad)
     }
 
+    /**Pinta el interior de la celda. Usa como argumento una instancia de la clase Dibujante o Renderizado.*/
     rellenar(dibujante: Dibujante): void {
         dibujante.rellenarCelda(this);
     }

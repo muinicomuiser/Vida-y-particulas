@@ -3,7 +3,6 @@
 
 import { Contenedor } from "../Fisicas/Contenedor.js";
 import { Cuerpo } from "../Fisicas/Cuerpo.js";
-// import { Cuadricula, Entorno, Forma, Interaccion, Renderizado } from "../mui.js";
 import { Cuadricula } from "../Cuadricula/Cuadricula.js";
 import { Entorno } from "../Interaccion/Entorno.js";
 import { Forma } from "../GeometriaPlana/Formas.js";
@@ -23,15 +22,42 @@ export class Composicion {
     cuadricula!: Cuadricula;
     tiempo!: Tiempo;
     contenedores: Contenedor[] = [];
-    entorno!: Entorno;
+    private _entorno: Entorno | undefined = undefined;
     fps: number = 60;
+    usarfpsNativos: boolean = false;
     tick: number = 50;
     animar: boolean = true;
 
 
-    constructor(idCanvas: string) {
-        this.render = Renderizado.crearPorIdCanvas(idCanvas);
+    private constructor(canvas?: HTMLCanvasElement, idCanvas?: string) {
+        if (canvas) {
+            this.render = Renderizado.crearConCanvas(canvas);
+        }
+        else {
+            this.render = Renderizado.crearConIdCanvas(idCanvas!);
+        }
     }
+
+    set entorno(entorno: Entorno) {
+        this._entorno = entorno;
+    }
+
+    get entorno(): Entorno {
+        return this._entorno!;
+    }
+
+    /**Retorna un objeto de tipo Composicion a partir del id de un canvas.*/
+    static crearConIDCanvas(idCanvas: string): Composicion {
+        const nuevaCompo: Composicion = new Composicion(undefined, idCanvas)
+        return nuevaCompo;
+    }
+
+    /**Retorna un objeto de tipo Composicion a partir de un canvas.*/
+    static crearConCanvas(canvas: HTMLCanvasElement): Composicion {
+        const nuevaCompo: Composicion = new Composicion(canvas);
+        return nuevaCompo;
+    }
+
 
     /**Define el ancho y el alto del canvas, en pixeles. */
     tamanoCanvas(ancho: number, alto: number) {
@@ -44,12 +70,12 @@ export class Composicion {
         this.cuerpos.push(...cuerpos);
     }
 
-    /**Actualiza la posición de un conjunto de cuerpos sumando la velocidad instantanea a la posición.*/
-    actualizarMovimientoCuerpos() {
+    /**Actualiza la posición del conjunto de cuerpos sumando la velocidad instantánea a la posición.*/
+    moverCuerpos() {
         this.cuerpos.forEach((cuerpo) => cuerpo.mover())
     }
 
-    /**Calcula la colisión entre los cuerpos de la composición y resuelve sus choques como choques eslásticos.*/
+    /**Calcula la colisión entre los cuerpos de la composición y resuelve sus choques como choques elásticos.*/
     reboteElasticoCuerpos() {
         Interaccion.reboteEntreCuerpos(this.cuerpos)
     }
@@ -79,16 +105,19 @@ export class Composicion {
         this.render.renderizarFormas(this.formas)
     }
 
-
-    animacion(funcionCalcular: () => void, funcionRenderizar: () => void, ajustarFPS: boolean = true): void {
+    /**Crea un loop para ejecutar dos funciones, una asociada a la duración de cada tick y otra a los fps.          
+     * El atributo .tick permite cambiar su duración en milisegundos.       
+     * La propiedad .fps permite ajustar su número.         
+     */
+    animacion(funcionCalcular: () => void, funcionRenderizar: () => void): void {
         let tiempoCalculo: Tiempo = new Tiempo()
         let tiempoFrame: Tiempo = new Tiempo()
 
         const funcionAnimar = () => {
-            if (this.animar && ajustarFPS) {
+            if (this.animar && !this.usarfpsNativos) {
                 tiempoCalculo.iterarPorSegundo(funcionCalcular, 1000 / this.tick)
                 tiempoFrame.iterarPorSegundo(funcionRenderizar, this.fps)
-            } else if (this.animar && !ajustarFPS) {
+            } else if (this.animar && this.usarfpsNativos) {
                 tiempoCalculo.iterarPorSegundo(funcionCalcular, 1000 / this.tick)
                 funcionRenderizar();
             }
@@ -96,18 +125,7 @@ export class Composicion {
         }
         funcionAnimar()
     }
-    // animacion(funcion: () => void): void {
-    //     let tiempo: Tiempo = new Tiempo()
-    //     const funcionAnimar = () => {
-    //         let fps: number = this.fps;
-    //         if (this.animar) {
-    //             tiempo.iterarPorSegundo(funcion, fps)
-    //         }
 
-    //         requestAnimationFrame(funcionAnimar)
-    //     }
-    //     funcionAnimar()
-    // }
 
     bordesEntornoInfinitos(entorno: Entorno) {
         this.cuerpos.forEach((cuerpo) => {

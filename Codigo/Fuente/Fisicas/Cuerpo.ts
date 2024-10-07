@@ -67,7 +67,6 @@ export class Cuerpo extends Forma {
         return Vector.clonar(this._aceleracion);
     }
 
-    /**Retorna el conjunto de vértices después de */
     get verticesTransformados(): Vector[] {
         if (this.rotarSegunVelocidad == true) {
             this.transformacionAnterior.rotacion = this._transformacion.rotacion
@@ -77,12 +76,12 @@ export class Cuerpo extends Forma {
         return super.verticesTransformados;
     }
 
-    /**Retorna una copia del vector velocidad.*/
+    /**Modifica el vector velocidad.*/
     set velocidad(velocidad: Vector) {
         this._velocidad = Vector.clonar(velocidad);
     }
 
-    /**Retorna una copia del vector aceleración. */
+    /**Modifica el vector aceleración.*/
     set aceleracion(aceleracion: Vector) {
         this._aceleracion = Vector.clonar(aceleracion);
     }
@@ -176,7 +175,7 @@ export class Cuerpo extends Forma {
 
     }
 
-    /**Suma la velocidad y la aceleración a la posición.*/
+    /**Suma la aceleración a la velocidad y la velocidad a la posición.*/
     public mover(): void {
         if (!this.fijo) {
             this._velocidad = Vector.suma(this._velocidad, this._aceleracion);
@@ -194,7 +193,7 @@ export class Cuerpo extends Forma {
 
 
     /**Aplica las transformaciones definidas para cada evento (de teclado, mouse u otro) sobre el cuerpo.*/
-    public ejecutarControles() {
+    public usarControles() {
         if (this.controles.arriba) {
             this.posicion = Vector.suma(this.posicion, Vector.escalar(Vector.normalizar(this.normales[0]), this.controles.rapidez))
         }

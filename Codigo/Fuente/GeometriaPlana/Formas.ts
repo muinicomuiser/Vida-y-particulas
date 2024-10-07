@@ -42,8 +42,9 @@ export class Forma {
 
     colorRelleno: string | undefined;
 
+    /**Determina si la forma debe ser trazada al renderizar.*/
     trazada: boolean = true;
-
+    /**Determina si la forma debe ser rellenada al renderizar.*/
     rellenada: boolean = true;
 
     grosorTrazo: number | undefined
@@ -80,6 +81,7 @@ export class Forma {
         return this._transformacion.rotacion;
     }
 
+    /**Retorna el valor de la escala de la forma.*/
     get escala(): number {
         return this._transformacion.escala;
     }
@@ -89,7 +91,7 @@ export class Forma {
         return Vector.clonarConjunto(this._vertices);
     }
 
-    /**Retorna el arreglo de vértices después de aplicar las transformaciones de escala, rotación y desplazamiento..*/
+    /**Retorna una copia del arreglo de vértices después de aplicar las transformaciones de escala, rotación y desplazamiento.*/
     get verticesTransformados(): Vector[] {
         if (this.transformar) {
             this.verticesTransformadosAnteriores = Vector.clonarConjunto(this._verticesTransformados)
@@ -98,8 +100,8 @@ export class Forma {
         return Vector.clonarConjunto(this._verticesTransformados)
     }
 
-    /**Retorna un conjunto de vectores normales de cada arista del polígono.        
-     * El orden de las aristas es en senttipoo horario.       
+    /**Retorna el conjunto de vectores normales de cada arista del polígono.        
+     * El orden de las aristas es en sentido horario.       
     */
     get normales(): Vector[] {
         let normales: Vector[] = [];
@@ -146,7 +148,7 @@ export class Forma {
         this._transformacion.rotacion = rotacion;
     }
 
-    /**Reemplaza el valor de la rotación de la forma.*/
+    /**Reemplaza el valor de la escala de la forma.*/
     set escala(nuevaEscala: number) {
         this.transformar = true;
         this.transformacionAnterior.escala = this._transformacion.escala;
@@ -158,7 +160,7 @@ export class Forma {
         this._vertices = Vector.clonarConjunto(vertices);
     }
 
-    /**Permite modificar las opciones gráficas con la interfaz OpcionesGráficasForma*/
+    /**Permite modificar las opciones gráficas con la interfaz OpcionesGraficasForma*/
     set estiloGrafico(opciones: OpcionesGraficasForma) {
         this.aplicarOpciones(opciones)
     }
@@ -181,12 +183,13 @@ export class Forma {
         return nVertices;
     }
 
-    //Agregar control de errores para índices mayores al número de vértices
+    ////////Agregar control de errores para índices mayores al número de vértices
+
     public moverVertice(indice: number, punto: Punto) {
         this._vertices[indice] = Vector.crear(punto.x, punto.y);
     }
 
-    /**Retorna una forma de tipo polígono. El radio es el valor entre el centro y cualquiera de sus vértices.*/
+    /**Retorna una forma de tipo polígono. El radio es el valor de la distancia entre el centro y cualquiera de sus vértices.*/
     static poligono(x: number, y: number, lados: number, radio: number, opciones?: OpcionesForma & OpcionesGraficasForma) {
         let nuevoPoligono = new Forma();
         nuevoPoligono.lados = lados;
@@ -221,7 +224,7 @@ export class Forma {
         return nuevaCircunferencia;
     }
 
-    /**Retorna una forma de tipo rectángulo. */
+    /**Retorna una forma de tipo rectángulo. El radio es el valor de la distancia entre el centro y cualquiera de sus vértices.*/
     static rectangulo(x: number, y: number, base: number, altura: number, opciones?: OpcionesForma & OpcionesGraficasForma) {
         let rectangulo = new Forma();
         rectangulo.lados = 4;
@@ -240,7 +243,7 @@ export class Forma {
     }
 
 
-    /**Crea una recta centrada en el origen y con la posición ingresada almacenada en su registro de transformación.*/
+    /**Crea una recta centrada en la posición ingresada.*/
     static recta(puntoUno: Punto, puntoDos: Punto, opciones?: OpcionesForma & OpcionesGraficasForma) {
         let linea: Forma = new Forma();
         linea.lados = 1;
@@ -258,8 +261,7 @@ export class Forma {
 
     /**
      * Crea un conjunto de rectas a partir de un grupo de vértices.
-     * Calcula el centro de los vértices, centra la forma en el origen y almacena
-     * el centro en el registro de transformación.
+     * Calcula el centro de los vértices y centra el trazo en la posición ingresada.
      */
     static trazo(vertices: Vector[], opciones?: OpcionesForma & OpcionesGraficasForma): Forma {
         let centro: Vector = Vector.crear(0, 0)
@@ -279,8 +281,7 @@ export class Forma {
 
     /**
      * Crea un polígono a partir de un grupo de vértices.
-     * Calcula el centro de los vértices, centra la forma en el origen y almacena
-     * el centro en el registro de transformación.
+     * Calcula el centro de los vértices ingresados y lo asigna a su posición.
      */
     static poligonoSegunVertices(vertices: Vector[], opciones?: OpcionesForma & OpcionesGraficasForma): Forma {
         let centro: Vector = Vector.crear(0, 0)
@@ -354,14 +355,14 @@ export class Forma {
         return clonForma;
     }
 
-    /**Suma el ángulo ingresado al ángulo de rotación de la figura.*/
+    /**Suma el ángulo ingresado al ángulo de rotación de la forma.*/
     public rotar(angulo: number): void {
         this.transformacionAnterior.rotacion = this._transformacion.rotacion;
         this._transformacion.rotacion += angulo;
         this.transformar = true;
     }
 
-    /**Suma el vector ingresado al vector de posición de la figura.*/
+    /**Suma el vector ingresado al vector de posición de la forma.*/
     public desplazar(vector: Vector) {
         this.transformacionAnterior.posicion = this._transformacion.posicion;
         this._transformacion.posicion = Vector.suma(this._transformacion.posicion, vector);

@@ -76,15 +76,15 @@ export class Cuadricula {
             for (let fil: number = -celda.distanciaVecindad; fil <= celda.distanciaVecindad; fil++) {
                 if (!(col == 0 && fil == 0)) {
                     if (this._bordesInfinitos) {
-                        let vecinoX: number = (celda.x + col) <= this.columnas ? celda.x + col : celda.x + col - this.columnas;
+                        let vecinoX: number = (celda.columna + col) <= this.columnas ? celda.columna + col : celda.columna + col - this.columnas;
                         vecinoX = vecinoX > 0 ? vecinoX : vecinoX + this.columnas;
-                        let vecinoY: number = (celda.y + fil) <= this.filas ? celda.y + fil : celda.y + fil - this.filas;
+                        let vecinoY: number = (celda.fila + fil) <= this.filas ? celda.fila + fil : celda.fila + fil - this.filas;
                         vecinoY = vecinoY > 0 ? vecinoY : vecinoY + this.filas;
                         posicionesVecinos.push(Vector.crear(vecinoX, vecinoY))
                     }
                     else {
-                        if (fil + celda.y > 0 && fil + celda.y <= this.filas && col + celda.x > 0 && col + celda.x <= this.columnas) {
-                            posicionesVecinos.push(Vector.crear(celda.x + col, celda.y + fil))
+                        if (fil + celda.fila > 0 && fil + celda.fila <= this.filas && col + celda.columna > 0 && col + celda.columna <= this.columnas) {
+                            posicionesVecinos.push(Vector.crear(celda.columna + col, celda.fila + fil))
                         }
                     }
                 }
@@ -98,7 +98,7 @@ export class Cuadricula {
      * [[estado, número de vecinos en ese estado], [estado, número de vecinos en ese estado]...]
      */
     estadosVecinosPorCelda(celda: Celda): [number, number][] {
-        let vecinos: Vector[] = this.celdas[celda.x - 1][celda.y - 1].posicionVecinos;
+        let vecinos: Vector[] = this.celdas[celda.columna - 1][celda.fila - 1].posicionVecinos;
         let listaEstados: [number, number][] = [];
         for (let estado: number = 0; estado < this.estados; estado++) {
             listaEstados.push([estado, 0])

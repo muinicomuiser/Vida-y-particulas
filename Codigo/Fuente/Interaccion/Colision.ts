@@ -18,7 +18,7 @@ import { Geometria } from "../Utiles/Geometria.js";
 export class Colision {
 
     static get iteraciones(): number {
-        return 4;
+        return 2;
     }
 
     /**Detecta colisiones usando el teorema SAT entre formas de tipo circunferencia y/o polígono.      

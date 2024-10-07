@@ -1,6 +1,6 @@
 import { Composicion, Cuerpo, Entorno, Fuerza, Geometria, Grabador, Matematica, Renderizado, Vector } from "./Fuente/mui.js";
 
-const COMPO: Composicion = new Composicion('canvas');
+const COMPO: Composicion = Composicion.crearConIDCanvas('canvas');
 const RENDER: Renderizado = COMPO.render;
 COMPO.tamanoCanvas(1080, 1080);
 
@@ -159,10 +159,10 @@ function nuevoCuadro() {
     RENDER.limpiarCanvas()
     interaccionParticulas()
     // COMPO.bordesEntornoInfinitos(ENTORNO)
-    COMPO.entorno.rebotarConBorde()
+    COMPO.entorno.rebotarCircunferenciasConBorde()
     COMPO.contactoSimpleCuerpos()
     COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
-    COMPO.actualizarMovimientoCuerpos()
+    COMPO.moverCuerpos()
     COMPO.renderizarCuerpos()
 }
 

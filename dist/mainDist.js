@@ -1,23 +1,6 @@
 (function () {
     'use strict';
 
-    /**
-     * MÓDULO MATEMÁTICO EN ESPAÑOL
-     * Reducido. Contiene solo funciones útiles de números aleatorios.
-     */
-    class Matematica {
-        /**Retorna un número aleatorio entre dos números.*/
-        static aleatorio(min, max) {
-            let rango = max - min;
-            return (Math.random() * rango) + min;
-        }
-        /**Retorna un número aleatorio entero entre dos números, ambos incluídos.*/
-        static aleatorioEntero(min, max) {
-            let rango = 1 + max - min;
-            return Math.trunc((Math.random() * rango) + min);
-        }
-    }
-
     /**MÓDULO DE GEOMETRÍA EN ESPAÑOL
      * Útilitario para mui.js
      * Incluye métodos de conversión de grados y distancia entre puntos.
@@ -315,7 +298,9 @@
             this.radio = 0;
             this.lados = 0;
             this.tipo = TipoFormas.poligono;
+            /**Determina si la forma debe ser trazada al renderizar.*/
             this.trazada = true;
+            /**Determina si la forma debe ser rellenada al renderizar.*/
             this.rellenada = true;
         }
         /**Retorna el valor del radio con la transformación de escala aplicada.*/
@@ -341,6 +326,7 @@
         get rotacion() {
             return this._transformacion.rotacion;
         }
+        /**Retorna el valor de la escala de la forma.*/
         get escala() {
             return this._transformacion.escala;
         }
@@ -348,7 +334,7 @@
         get vertices() {
             return Vector.clonarConjunto(this._vertices);
         }
-        /**Retorna el arreglo de vértices después de aplicar las transformaciones de escala, rotación y desplazamiento..*/
+        /**Retorna una copia del arreglo de vértices después de aplicar las transformaciones de escala, rotación y desplazamiento.*/
         get verticesTransformados() {
             if (this.transformar) {
                 this.verticesTransformadosAnteriores = Vector.clonarConjunto(this._verticesTransformados);
@@ -356,8 +342,8 @@
             }
             return Vector.clonarConjunto(this._verticesTransformados);
         }
-        /**Retorna un conjunto de vectores normales de cada arista del polígono.
-         * El orden de las aristas es en senttipoo horario.
+        /**Retorna el conjunto de vectores normales de cada arista del polígono.
+         * El orden de las aristas es en sentido horario.
         */
         get normales() {
             let normales = [];
@@ -398,7 +384,7 @@
             this.transformacionAnterior.rotacion = this._transformacion.rotacion;
             this._transformacion.rotacion = rotacion;
         }
-        /**Reemplaza el valor de la rotación de la forma.*/
+        /**Reemplaza el valor de la escala de la forma.*/
         set escala(nuevaEscala) {
             this.transformar = true;
             this.transformacionAnterior.escala = this._transformacion.escala;
@@ -408,7 +394,7 @@
         set vertices(vertices) {
             this._vertices = Vector.clonarConjunto(vertices);
         }
-        /**Permite modificar las opciones gráficas con la interfaz OpcionesGráficasForma*/
+        /**Permite modificar las opciones gráficas con la interfaz OpcionesGraficasForma*/
         set estiloGrafico(opciones) {
             this.aplicarOpciones(opciones);
         }
@@ -429,11 +415,11 @@
             }
             return nVertices;
         }
-        //Agregar control de errores para índices mayores al número de vértices
+        ////////Agregar control de errores para índices mayores al número de vértices
         moverVertice(indice, punto) {
             this._vertices[indice] = Vector.crear(punto.x, punto.y);
         }
-        /**Retorna una forma de tipo polígono. El radio es el valor entre el centro y cualquiera de sus vértices.*/
+        /**Retorna una forma de tipo polígono. El radio es el valor de la distancia entre el centro y cualquiera de sus vértices.*/
         static poligono(x, y, lados, radio, opciones) {
             let nuevoPoligono = new Forma();
             nuevoPoligono.lados = lados;
@@ -466,7 +452,7 @@
             nuevaCircunferencia.iniciarTransformacion(x, y);
             return nuevaCircunferencia;
         }
-        /**Retorna una forma de tipo rectángulo. */
+        /**Retorna una forma de tipo rectángulo. El radio es el valor de la distancia entre el centro y cualquiera de sus vértices.*/
         static rectangulo(x, y, base, altura, opciones) {
             let rectangulo = new Forma();
             rectangulo.lados = 4;
@@ -483,7 +469,7 @@
             rectangulo.iniciarTransformacion(x, y);
             return rectangulo;
         }
-        /**Crea una recta centrada en el origen y con la posición ingresada almacenada en su registro de transformación.*/
+        /**Crea una recta centrada en la posición ingresada.*/
         static recta(puntoUno, puntoDos, opciones) {
             let linea = new Forma();
             linea.lados = 1;
@@ -499,8 +485,7 @@
         }
         /**
          * Crea un conjunto de rectas a partir de un grupo de vértices.
-         * Calcula el centro de los vértices, centra la forma en el origen y almacena
-         * el centro en el registro de transformación.
+         * Calcula el centro de los vértices y centra el trazo en la posición ingresada.
          */
         static trazo(vertices, opciones) {
             let centro = Vector.crear(0, 0);
@@ -519,8 +504,7 @@
         }
         /**
          * Crea un polígono a partir de un grupo de vértices.
-         * Calcula el centro de los vértices, centra la forma en el origen y almacena
-         * el centro en el registro de transformación.
+         * Calcula el centro de los vértices ingresados y lo asigna a su posición.
          */
         static poligonoSegunVertices(vertices, opciones) {
             let centro = Vector.crear(0, 0);
@@ -589,13 +573,13 @@
             clonForma.iniciarTransformacion(this.posicion.x, this.posicion.y);
             return clonForma;
         }
-        /**Suma el ángulo ingresado al ángulo de rotación de la figura.*/
+        /**Suma el ángulo ingresado al ángulo de rotación de la forma.*/
         rotar(angulo) {
             this.transformacionAnterior.rotacion = this._transformacion.rotacion;
             this._transformacion.rotacion += angulo;
             this.transformar = true;
         }
-        /**Suma el vector ingresado al vector de posición de la figura.*/
+        /**Suma el vector ingresado al vector de posición de la forma.*/
         desplazar(vector) {
             this.transformacionAnterior.posicion = this._transformacion.posicion;
             this._transformacion.posicion = Vector.suma(this._transformacion.posicion, vector);
@@ -623,6 +607,42 @@
         }
     }
 
+    //Momento lineal, movimiento acelerado, momento angular, energía cinética y potencial.
+    class Cinematica {
+        /**Retorna un vector velocidad de un cuerpo que colisiona con una superficie.*/
+        static reboteSimple(cuerpo, normal) {
+            let vectorRebotado = cuerpo.velocidad;
+            if (Vector.anguloVectores(vectorRebotado, normal) > Geometria.PI_MEDIO) {
+                vectorRebotado = Vector.invertir(vectorRebotado);
+            }
+            return Vector.rotar(vectorRebotado, (Vector.angulo(normal) - Vector.angulo(vectorRebotado)) * 2);
+        }
+        /**Retorna en un arreglo las velocidades finales después de un choque elástico entre dos cuerpos.*/
+        static reboteElastico(cuerpoUno, cuerpoDos) {
+            return [Cinematica.velocidadUnoFinal(cuerpoUno, cuerpoDos), Cinematica.velocidadDosFinal(cuerpoUno, cuerpoDos)];
+        }
+        static velocidadUnoFinal(cuerpoUno, cuerpoDos) {
+            const velUnoInicial = cuerpoUno.velocidad;
+            const divisionMasas = (2 * cuerpoDos.masa) / (cuerpoUno.masa + cuerpoDos.masa);
+            const restaVelocidades = Vector.resta(cuerpoDos.velocidad, cuerpoUno.velocidad);
+            const restaPosiciones = Vector.resta(cuerpoDos.posicion, cuerpoUno.posicion);
+            const puntoVelocidadesPosiciones = Vector.punto(restaVelocidades, restaPosiciones);
+            const moduloPosicionesCuadrado = Math.pow(restaPosiciones.magnitud, 2);
+            const velUnoFinal = Vector.suma(velUnoInicial, Vector.escalar(restaPosiciones, divisionMasas * puntoVelocidadesPosiciones / moduloPosicionesCuadrado));
+            return velUnoFinal;
+        }
+        static velocidadDosFinal(cuerpoUno, cuerpoDos) {
+            const velDosInicial = cuerpoDos.velocidad;
+            const divisionMasas = (2 * cuerpoUno.masa) / (cuerpoUno.masa + cuerpoDos.masa);
+            const restaVelocidades = Vector.resta(cuerpoUno.velocidad, cuerpoDos.velocidad);
+            const restaPosiciones = Vector.resta(cuerpoUno.posicion, cuerpoDos.posicion);
+            const puntoVelocidadesPosiciones = Vector.punto(restaVelocidades, restaPosiciones);
+            const moduloPosicionesCuadrado = Math.pow(restaPosiciones.magnitud, 2);
+            const velDosFinal = Vector.suma(velDosInicial, Vector.escalar(restaPosiciones, divisionMasas * puntoVelocidadesPosiciones / moduloPosicionesCuadrado));
+            return velDosFinal;
+        }
+    }
+
     /**
             =============================================
                      * MÓDULO DE COLISIONES *
@@ -638,7 +658,7 @@
     */
     class Colision {
         static get iteraciones() {
-            return 4;
+            return 2;
         }
         /**Detecta colisiones usando el teorema SAT entre formas de tipo circunferencia y/o polígono.
          * Retorna true si detecta una colisión.
@@ -826,46 +846,10 @@
         }
     }
 
-    //Momento lineal, movimiento acelerado, momento angular, energía cinética y potencial.
-    class Cinematica {
-        /**Retorna un vector velocidad de un cuerpo que colisiona con una superficie.*/
-        static reboteSimple(cuerpo, normal) {
-            let vectorRebotado = cuerpo.velocidad;
-            if (Vector.anguloVectores(vectorRebotado, normal) > Geometria.PI_MEDIO) {
-                vectorRebotado = Vector.invertir(vectorRebotado);
-            }
-            return Vector.rotar(vectorRebotado, (Vector.angulo(normal) - Vector.angulo(vectorRebotado)) * 2);
-        }
-        /**Retorna en un arreglo las velocidades finales después de un choque elástico entre dos cuerpos.*/
-        static reboteElastico(cuerpoUno, cuerpoDos) {
-            return [Cinematica.velocidadUnoFinal(cuerpoUno, cuerpoDos), Cinematica.velocidadDosFinal(cuerpoUno, cuerpoDos)];
-        }
-        static velocidadUnoFinal(cuerpoUno, cuerpoDos) {
-            const velUnoInicial = cuerpoUno.velocidad;
-            const divisionMasas = (2 * cuerpoDos.masa) / (cuerpoUno.masa + cuerpoDos.masa);
-            const restaVelocidades = Vector.resta(cuerpoDos.velocidad, cuerpoUno.velocidad);
-            const restaPosiciones = Vector.resta(cuerpoDos.posicion, cuerpoUno.posicion);
-            const puntoVelocidadesPosiciones = Vector.punto(restaVelocidades, restaPosiciones);
-            const moduloPosicionesCuadrado = Math.pow(restaPosiciones.magnitud, 2);
-            const velUnoFinal = Vector.suma(velUnoInicial, Vector.escalar(restaPosiciones, divisionMasas * puntoVelocidadesPosiciones / moduloPosicionesCuadrado));
-            return velUnoFinal;
-        }
-        static velocidadDosFinal(cuerpoUno, cuerpoDos) {
-            const velDosInicial = cuerpoDos.velocidad;
-            const divisionMasas = (2 * cuerpoUno.masa) / (cuerpoUno.masa + cuerpoDos.masa);
-            const restaVelocidades = Vector.resta(cuerpoUno.velocidad, cuerpoDos.velocidad);
-            const restaPosiciones = Vector.resta(cuerpoUno.posicion, cuerpoDos.posicion);
-            const puntoVelocidadesPosiciones = Vector.punto(restaVelocidades, restaPosiciones);
-            const moduloPosicionesCuadrado = Math.pow(restaPosiciones.magnitud, 2);
-            const velDosFinal = Vector.suma(velDosInicial, Vector.escalar(restaPosiciones, divisionMasas * puntoVelocidadesPosiciones / moduloPosicionesCuadrado));
-            return velDosFinal;
-        }
-    }
-
     //Interacciones entre cuerpos.
     class Interaccion {
         static get iteraciones() {
-            return 5;
+            return 1;
         }
         /**Retorna una copia del conjunto de cuerpos con la resolución de rebote para cuerpos que han colisionado.      */
         static reboteEntreCuerpos(cuerpos) {
@@ -901,6 +885,7 @@
         }
         /**Retorna una copia del conjunto de cuerpos con la resolución de contacto sólido para cuerpos que han colisionado.      */
         static contactoSimple(cuerpos) {
+            // console.log('Comprobando')
             for (let iteracion = 0; iteracion < Interaccion.iteraciones; iteracion++) {
                 // let cuerposRebotados: Cuerpo[] = [];
                 for (let i = 0; i < cuerpos.length - 1; i++) {
@@ -945,6 +930,8 @@
                 if (solapamiento != null) {
                     let normal = Colision.normalContactoConEntorno(circunferencias[i], entorno);
                     let normalInvertida = Vector.invertir(normal);
+                    // circunferencias[i].velocidad = Cinematica.reboteElastico(circunferencias[i], entorno)[0]
+                    // circunferencias[i].velocidad = Vector.invertir(Cinematica.reboteElastico(circunferencias[i], entorno)[0])
                     circunferencias[i].velocidad = Cinematica.reboteSimple(circunferencias[i], normalInvertida);
                     circunferencias[i].posicion = Vector.suma(circunferencias[i].posicion, Interaccion.resolverSolapamientoEntorno(normalInvertida, solapamiento));
                 }
@@ -959,6 +946,26 @@
         }
     }
 
+    /**
+     * MÓDULO MATEMÁTICO EN ESPAÑOL
+     * Reducido. Contiene solo funciones útiles de números aleatorios.
+     */
+    class Matematica {
+        /**Retorna un número aleatorio entre dos números.*/
+        static aleatorio(min, max) {
+            let rango = max - min;
+            return (Math.random() * rango) + min;
+        }
+        /**Retorna un número aleatorio entero entre dos números, ambos incluídos.*/
+        static aleatorioEntero(min, max) {
+            let rango = 1 + max - min;
+            return Math.trunc((Math.random() * rango) + min);
+        }
+        static compararNumeros(numeroUno, numeroDos, epsilon = Number.EPSILON) {
+            return (Math.abs(numeroUno - numeroDos) < epsilon);
+        }
+    }
+
     //REPENSAR ESTA CLASE
     class Contenedor {
         constructor(cuerpo) {
@@ -966,9 +973,11 @@
             this.cuerpo = cuerpo;
             this.cuerpo.fijo = true;
         }
+        /**Retorna el conjunto de vectores normales de cada arista del contenedor. */
         get normales() {
             return Vector.clonarConjunto(this.cuerpo.normales);
         }
+        /**Retorna un objeto Contenedor a partir de un cuerpo.*/
         static crearContenedor(cuerpo) {
             return new Contenedor(cuerpo);
         }
@@ -976,9 +985,10 @@
         agregarCuerposContenidos(...cuerpos) {
             this.cuerposContenidos.push(...cuerpos);
         }
-        rebotarConBorde() {
+        rebotarCircunferenciasConBorde() {
             Interaccion.reboteCircunferenciasConEntorno(this.cuerposContenidos, this.cuerpo);
         }
+        /**Suma la aceleración a la velocidad y la velocidad a la posición.*/
         mover() {
             this.cuerpo.mover();
         }
@@ -1035,7 +1045,6 @@
         get aceleracion() {
             return Vector.clonar(this._aceleracion);
         }
-        /**Retorna el conjunto de vértices después de */
         get verticesTransformados() {
             if (this.rotarSegunVelocidad == true) {
                 this.transformacionAnterior.rotacion = this._transformacion.rotacion;
@@ -1044,11 +1053,11 @@
             }
             return super.verticesTransformados;
         }
-        /**Retorna una copia del vector velocidad.*/
+        /**Modifica el vector velocidad.*/
         set velocidad(velocidad) {
             this._velocidad = Vector.clonar(velocidad);
         }
-        /**Retorna una copia del vector aceleración. */
+        /**Modifica el vector aceleración.*/
         set aceleracion(aceleracion) {
             this._aceleracion = Vector.clonar(aceleracion);
         }
@@ -1130,7 +1139,7 @@
             cuerpoClonado.controlable = this.controlable;
             return cuerpoClonado;
         }
-        /**Suma la velocidad y la aceleración a la posición.*/
+        /**Suma la aceleración a la velocidad y la velocidad a la posición.*/
         mover() {
             if (!this.fijo) {
                 this._velocidad = Vector.suma(this._velocidad, this._aceleracion);
@@ -1145,7 +1154,7 @@
             dibujante.trazarVector(vectorVelocidad);
         }
         /**Aplica las transformaciones definidas para cada evento (de teclado, mouse u otro) sobre el cuerpo.*/
-        ejecutarControles() {
+        usarControles() {
             if (this.controles.arriba) {
                 this.posicion = Vector.suma(this.posicion, Vector.escalar(Vector.normalizar(this.normales[0]), this.controles.rapidez));
             }
@@ -1212,6 +1221,9 @@
     }
 
     class Restriccion {
+        /**Limita la magnitud de la velocidad de un cuerpo.
+         * Retorna una copia del vector velocidad si se ha modificado su magnitud.
+        */
         static limitarVelocidad(cuerpo, limite) {
             let magnitudVel = cuerpo.velocidad.magnitud;
             if (magnitudVel > limite) {
@@ -1243,37 +1255,37 @@
         /**Retorna un vector correspondiente a la aceleración de un cuerpo atraído hacia un cuerpo atractor.
          * TODAVÍA NO HE INCORPORADO LA MASA NI LA DISTANCIA.
         */
-        static atraer(cuerpo, atractor, magnitudAceleracion) {
+        static atraer(cuerpo, atractor, magnitudAtraccion) {
             let vectorAtractor = Vector.segunPuntos(cuerpo.posicion, atractor.posicion);
             vectorAtractor = Vector.normalizar(vectorAtractor);
-            vectorAtractor = Vector.escalar(vectorAtractor, magnitudAceleracion);
+            vectorAtractor = Vector.escalar(vectorAtractor, magnitudAtraccion);
             return vectorAtractor;
         }
         /**Retorna un vector correspondiente a la aceleración de un cuerpo atraído hacia un vector atractor.
          * TODAVÍA NO HE INCORPORADO LA MASA NI LA DISTANCIA.
         */
-        static atraerAVector(cuerpo, atractor, magnitudAceleracion) {
+        static atraerAVector(cuerpo, atractor, magnitudAtraccion) {
             let vectorAtractor = Vector.segunPuntos(cuerpo.posicion, atractor);
             vectorAtractor = Vector.normalizar(vectorAtractor);
-            vectorAtractor = Vector.escalar(vectorAtractor, magnitudAceleracion);
+            vectorAtractor = Vector.escalar(vectorAtractor, magnitudAtraccion);
             return vectorAtractor;
         }
         /**Retorna un vector correspondiente a la aceleración de un cuerpo repelido por un cuerpo repulsor.
         * TODAVÍA NO HE INCORPORADO LA MASA NI LA DISTANCIA.
         */
-        static repeler(cuerpo, repulsor, magnitudAceleracion) {
+        static repeler(cuerpo, repulsor, magnitudRepulsion) {
             let vectorAtractor = Vector.segunPuntos(repulsor.posicion, cuerpo.posicion);
             vectorAtractor = Vector.normalizar(vectorAtractor);
-            vectorAtractor = Vector.escalar(vectorAtractor, magnitudAceleracion);
+            vectorAtractor = Vector.escalar(vectorAtractor, magnitudRepulsion);
             return vectorAtractor;
         }
         /**Retorna un vector correspondiente a la aceleración de un cuerpo repelido por un vector repulsor.
         * TODAVÍA NO HE INCORPORADO LA MASA NI LA DISTANCIA.
        */
-        static repelerDeVector(cuerpo, repulsor, magnitudAceleracion) {
+        static repelerDeVector(cuerpo, repulsor, magnitudRepulsion) {
             let vectorRepulsor = Vector.segunPuntos(repulsor, cuerpo.posicion);
             vectorRepulsor = Vector.normalizar(vectorRepulsor);
-            vectorRepulsor = Vector.escalar(vectorRepulsor, magnitudAceleracion);
+            vectorRepulsor = Vector.escalar(vectorRepulsor, magnitudRepulsion);
             return vectorRepulsor;
         }
     }
@@ -1285,6 +1297,9 @@
     class Dibujante {
         constructor(context) {
             // opcionesCelda:
+            /**Opciones del método en que se graficará.
+             * 'colorTrazo', 'colorRelleno', 'trazada', 'rellenada', 'grosorTrazo' y 'opacidad'.
+            */
             this.estiloForma = {
                 colorTrazo: 'blue',
                 colorRelleno: "skyblue",
@@ -1293,7 +1308,7 @@
                 grosorTrazo: 1,
                 opacidad: 1,
             };
-            /**Opciones de color, tamaño, fuente, opacidad y alineación.*/
+            /**Opciones de 'color', 'tamano', 'fuente', 'opacidad' y 'alineacion'.*/
             this.estiloTexto = {
                 color: "red",
                 tamano: 10,
@@ -1301,6 +1316,9 @@
                 opacidad: 1,
                 alineacion: "right"
             };
+            /**Opciones del método en que se graficará.
+            * 'color' y 'grosorTrazo'.
+            */
             this.estiloVector = {
                 color: "red",
                 grosorTrazo: 1,
@@ -1396,20 +1414,20 @@
             }
             this.context.fill();
         }
-        /**Rellena en el canvas la forma ingresada como argumento.*/
+        /**Rellena en el canvas la celda ingresada como argumento.*/
         rellenarCelda(celda) {
             this.context.beginPath();
-            this.context.clearRect((celda.x - 1) * celda.tamano, (celda.y - 1) * celda.tamano, celda.tamano, celda.tamano);
+            this.context.clearRect((celda.columna - 1) * celda.tamano, (celda.fila - 1) * celda.tamano, celda.tamano, celda.tamano);
             this.context.globalAlpha = this.estiloForma.opacidad;
             this.context.fillStyle = this.colorCelda;
             if (celda.color) {
                 this.context.fillStyle = celda.color;
             }
-            this.context.fillRect((celda.x - 1) * celda.tamano, (celda.y - 1) * celda.tamano, celda.tamano, celda.tamano);
+            this.context.fillRect((celda.columna - 1) * celda.tamano, (celda.fila - 1) * celda.tamano, celda.tamano, celda.tamano);
             this.context.globalAlpha = 1;
         }
         /** Traza en el canvas el vector ingresado como argumento.
-         * Usa como color el atributo colorVectores.
+         * Usa como color el atributo .estiloVector.color.
          */
         trazarVector(vector) {
             let origen = vector.origen;
@@ -1422,7 +1440,9 @@
             this.context.strokeStyle = this.estiloVector.color;
             this.context.stroke();
         }
-        /**Rellena un texto en el canvas en la posicion ingresada.*/
+        /**Rellena un texto en el canvas en la posicion ingresada.
+         * Usa como opciones gráficas el atributo .estiloTexto
+        */
         escribir(texto, posicionX, posicionY) {
             this.context.textAlign = this.estiloTexto.alineacion;
             this.context.font = `${this.estiloTexto.tamano}px ${this.estiloTexto.fuente}`;
@@ -1509,10 +1529,15 @@
             this.canvas.style.backgroundColor = this._colorFondo;
         }
         /**Retorna una instancia de renderizado usando como parámetro el id de un canvas presente en el documento HTML. */
-        static crearPorIdCanvas(idCanvas) {
+        static crearConIdCanvas(idCanvas) {
             const CANVAS = document.getElementById(idCanvas);
             let nuevoRenderizador = new Renderizado(CANVAS);
             return nuevoRenderizador;
+        }
+        /**Retorna una instancia de renderizado usando como parámetro el canvas presente en el documento HTML. */
+        static crearConCanvas(canvas) {
+            const nuevoRender = new Renderizado(canvas);
+            return nuevoRender;
         }
         /**Traza un conjunto de formas.*/
         trazarFormas(formas) {
@@ -1634,16 +1659,39 @@
     //Junta los cuerpos, interacciones, entorno, casos límite y renderizado.
     //Debería estar acá la creación de canvas y contexto??
     class Composicion {
-        constructor(idCanvas) {
+        constructor(canvas, idCanvas) {
             /**Conjunto de cuerpos sobre los que trabaja la composición.*/
             this.cuerpos = [];
             /**Conjunto de formas sobre las que trabaja la composición.*/
             this.formas = [];
             this.contenedores = [];
+            this._entorno = undefined;
             this.fps = 60;
+            this.usarfpsNativos = false;
             this.tick = 50;
             this.animar = true;
-            this.render = Renderizado.crearPorIdCanvas(idCanvas);
+            if (canvas) {
+                this.render = Renderizado.crearConCanvas(canvas);
+            }
+            else {
+                this.render = Renderizado.crearConIdCanvas(idCanvas);
+            }
+        }
+        set entorno(entorno) {
+            this._entorno = entorno;
+        }
+        get entorno() {
+            return this._entorno;
+        }
+        /**Retorna un objeto de tipo Composicion a partir del id de un canvas.*/
+        static crearConIDCanvas(idCanvas) {
+            const nuevaCompo = new Composicion(undefined, idCanvas);
+            return nuevaCompo;
+        }
+        /**Retorna un objeto de tipo Composicion a partir de un canvas.*/
+        static crearConCanvas(canvas) {
+            const nuevaCompo = new Composicion(canvas);
+            return nuevaCompo;
         }
         /**Define el ancho y el alto del canvas, en pixeles. */
         tamanoCanvas(ancho, alto) {
@@ -1654,11 +1702,11 @@
         agregarCuerpos(...cuerpos) {
             this.cuerpos.push(...cuerpos);
         }
-        /**Actualiza la posición de un conjunto de cuerpos sumando la velocidad instantanea a la posición.*/
-        actualizarMovimientoCuerpos() {
+        /**Actualiza la posición del conjunto de cuerpos sumando la velocidad instantánea a la posición.*/
+        moverCuerpos() {
             this.cuerpos.forEach((cuerpo) => cuerpo.mover());
         }
-        /**Calcula la colisión entre los cuerpos de la composición y resuelve sus choques como choques eslásticos.*/
+        /**Calcula la colisión entre los cuerpos de la composición y resuelve sus choques como choques elásticos.*/
         reboteElasticoCuerpos() {
             Interaccion.reboteEntreCuerpos(this.cuerpos);
         }
@@ -1682,15 +1730,19 @@
         renderizarFormas() {
             this.render.renderizarFormas(this.formas);
         }
-        animacion(funcionCalcular, funcionRenderizar, ajustarFPS = true) {
+        /**Crea un loop para ejecutar dos funciones, una asociada a la duración de cada tick y otra a los fps.
+         * El atributo .tick permite cambiar su duración en milisegundos.
+         * La propiedad .fps permite ajustar su número.
+         */
+        animacion(funcionCalcular, funcionRenderizar) {
             let tiempoCalculo = new Tiempo();
             let tiempoFrame = new Tiempo();
             const funcionAnimar = () => {
-                if (this.animar && ajustarFPS) {
+                if (this.animar && !this.usarfpsNativos) {
                     tiempoCalculo.iterarPorSegundo(funcionCalcular, 1000 / this.tick);
                     tiempoFrame.iterarPorSegundo(funcionRenderizar, this.fps);
                 }
-                else if (this.animar && !ajustarFPS) {
+                else if (this.animar && this.usarfpsNativos) {
                     tiempoCalculo.iterarPorSegundo(funcionCalcular, 1000 / this.tick);
                     funcionRenderizar();
                 }
@@ -1698,17 +1750,6 @@
             };
             funcionAnimar();
         }
-        // animacion(funcion: () => void): void {
-        //     let tiempo: Tiempo = new Tiempo()
-        //     const funcionAnimar = () => {
-        //         let fps: number = this.fps;
-        //         if (this.animar) {
-        //             tiempo.iterarPorSegundo(funcion, fps)
-        //         }
-        //         requestAnimationFrame(funcionAnimar)
-        //     }
-        //     funcionAnimar()
-        // }
         bordesEntornoInfinitos(entorno) {
             this.cuerpos.forEach((cuerpo) => {
                 cuerpo.posicion = entorno.envolverBorde(cuerpo.posicion);
@@ -1721,18 +1762,258 @@
         }
     }
 
-    const COMPO = new Composicion('canvas');
+    //Tengo que integrar un modo de recibir eventos de hardware
+    class ManejadorEventos {
+        /**Agrega un eventListener para eventos de teclado. Recibe una función callback y opcionalmente un parámetro si la función lo requiere.*/
+        static eventoTeclado(tipoEvento, tecla, manejarEvento, parametro) {
+            document.addEventListener(tipoEvento, (evento) => {
+                if (evento.key == CODIGOSTECLA[tecla]) {
+                    manejarEvento(parametro);
+                }
+            });
+        }
+        /**Agrega un eventListener para eventos de teclado tipo keyup. Recibe una función callback y opcionalmente un parámetro si la función lo requiere.*/
+        static eventoKeyup(tecla, manejarEvento, parametro) {
+            ManejadorEventos.eventoTeclado('keyup', tecla, manejarEvento, parametro);
+        }
+        /**Agrega un eventListener para eventos de teclado tipo keydown. Recibe una función callback y opcionalmente un parámetro si la función lo requiere.*/
+        static eventoKeydown(tecla, manejarEvento, parametro) {
+            ManejadorEventos.eventoTeclado('keydown', tecla, manejarEvento, parametro);
+        }
+        /**Agrega un eventListener para eventos de teclado tipo keypress. Recibe una función callback y opcionalmente un parámetro si la función lo requiere.*/
+        static eventoKeypress(tecla, manejarEvento, parametro) {
+            ManejadorEventos.eventoTeclado('keypress', tecla, manejarEvento, parametro);
+        }
+        /**Agrega un eventListener para eventos de mouse y para trabajar con las propiedades del evento.
+         * Recibe una función callback y opcionalmente un parámetro si la función lo requiere.*/
+        static eventoMouseEnCanvas(tipoEvento, canvas, manejarEvento, parametro) {
+            canvas.addEventListener(tipoEvento, (evento) => {
+                if (parametro != undefined) {
+                    manejarEvento(evento, parametro);
+                }
+                else {
+                    manejarEvento(evento, undefined);
+                }
+            });
+        }
+        /**Agrega un eventListener para detectar cambios en el mouse, mas no trabaja con el evento.
+         * Recibe una función callback y opcionalmente un parámetro si la función lo requiere.*/
+        static mouseEnCanvas(tipoEvento, canvas, manejarEvento, parametro) {
+            canvas.addEventListener(tipoEvento, () => {
+                if (parametro != undefined) {
+                    manejarEvento(parametro);
+                }
+                else {
+                    manejarEvento(undefined);
+                }
+            });
+        }
+        /**Previene que se activen acciones por defecto al presionar la tecla definida. */
+        static anularAccionPorDefecto(tecla) {
+            document.addEventListener('keydown', (event) => {
+                if (event.key == CODIGOSTECLA[tecla]) {
+                    event.preventDefault();
+                }
+            });
+        }
+    }
+    /**Constante que almacena los códigos de eventos de teclado.*/
+    const CODIGOSTECLA = {
+        espacio: " ",
+        enter: 'Enter',
+        arriba: 'ArrowUp',
+        abajo: 'ArrowDown',
+        izquierda: 'ArrowLeft',
+        derecha: 'ArrowRight',
+        a: 'a',
+        b: 'b',
+        c: 'c',
+        d: 'd',
+        e: 'e',
+        f: 'f',
+        g: 'g',
+        h: 'h',
+        i: 'i',
+        j: 'j',
+        k: 'k',
+        l: 'l',
+        m: 'm',
+        n: 'n',
+        ñ: 'ñ',
+        o: 'o',
+        p: 'p',
+        q: 'q',
+        r: 'r',
+        s: 's',
+        t: 't',
+        u: 'u',
+        v: 'v',
+        w: 'w',
+        x: 'x',
+        y: 'y',
+        z: 'z',
+        mas: '+',
+        menos: '-',
+    };
+
+    /**
+     * Inicio Quadtree
+     */
+    class QuadTree {
+        constructor(x, y, ancho, alto, capacidad = 4) {
+            this.subDividido = false;
+            this.puntos = [];
+            this.puntosRepetidos = [];
+            this.subDivisiones = [];
+            this.x = x;
+            this.y = y;
+            this.ancho = ancho;
+            this.alto = alto;
+            this.capacidad = capacidad;
+            this.contorno = this.formaCuadrante();
+        }
+        /**Agrega un punto a un QuadTree. Si al agregar el punto se sobrepasa la capacidad del QuadTree, se subdivide en cuatro QuadTrees nuevos. */
+        insertarPunto(punto, contenido) {
+            let puntoInsertado = contenido != undefined ? { x: punto.x, y: punto.y, contenido: contenido } : punto;
+            if (this.comprobarInsercion(puntoInsertado)) {
+                if (this.buscarPuntoRepetido(puntoInsertado)) {
+                    console.log('Repetido');
+                    return true;
+                    // this.puntosRepetidos.push(puntoInsertado)
+                }
+                if (this.puntos.length < this.capacidad) {
+                    this.puntos.push(puntoInsertado);
+                    return true;
+                }
+                else {
+                    if (!this.subDividido) {
+                        let quadSurEste = new QuadTree(this.x + this.ancho / 2, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad);
+                        let quadSurOeste = new QuadTree(this.x, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad);
+                        let quadNorOeste = new QuadTree(this.x, this.y, this.ancho / 2, this.alto / 2, this.capacidad);
+                        let quadNorEste = new QuadTree(this.x + this.ancho / 2, this.y, this.ancho / 2, this.alto / 2, this.capacidad);
+                        this.subDivisiones.push(quadSurEste, quadSurOeste, quadNorOeste, quadNorEste);
+                        this.puntos.forEach(puntoGuardado => {
+                            quadSurEste.insertarPunto(puntoGuardado);
+                            quadSurOeste.insertarPunto(puntoGuardado);
+                            quadNorOeste.insertarPunto(puntoGuardado);
+                            quadNorEste.insertarPunto(puntoGuardado);
+                        });
+                        // this.puntosRepetidos.forEach(puntoGuardado => {
+                        //     quadSurEste.insertarPunto(puntoGuardado);
+                        //     quadSurOeste.insertarPunto(puntoGuardado);
+                        //     quadNorOeste.insertarPunto(puntoGuardado);
+                        //     quadNorEste.insertarPunto(puntoGuardado);
+                        // })
+                        this.subDividido = true;
+                        return true;
+                    }
+                    else {
+                        this.subDivisiones[0].insertarPunto(puntoInsertado);
+                        this.subDivisiones[1].insertarPunto(puntoInsertado);
+                        this.subDivisiones[2].insertarPunto(puntoInsertado);
+                        this.subDivisiones[3].insertarPunto(puntoInsertado);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        comprobarInsercion(punto) {
+            if (punto.contenido) {
+                if ((punto.x + punto.contenido.radio >= this.x && punto.x - punto.contenido.radio <= this.x + this.ancho)
+                    && (punto.y + punto.contenido.radio >= this.y && punto.y - punto.contenido.radio <= this.y + this.alto)) {
+                    return true;
+                }
+                return false;
+            }
+            else {
+                if (punto.x >= this.x && punto.x <= this.x + this.ancho && punto.y >= this.y && punto.y <= this.y + this.alto) {
+                    return true;
+                }
+                return false;
+            }
+        }
+        trazar(dibujante, opciones) {
+            if (opciones) {
+                this.contorno.estiloGrafico = opciones;
+            }
+            this.contorno.trazar(dibujante);
+            if (this.subDivisiones.length > 0) {
+                this.subDivisiones.forEach(sub => sub.trazar(dibujante, opciones));
+            }
+        }
+        formaCuadrante() {
+            const centroX = this.x + (this.ancho / 2);
+            const centroY = this.y + (this.alto / 2);
+            return Forma.rectangulo(centroX, centroY, this.ancho, this.alto);
+        }
+        buscarPuntoRepetido(punto) {
+            let coincidencia = false;
+            this.puntos.forEach((puntoGuardado) => {
+                if (Matematica.compararNumeros(punto.x, puntoGuardado.x, 0.000000001) && Matematica.compararNumeros(punto.y, puntoGuardado.y, 0.000000001)) {
+                    console.log('repetido');
+                    coincidencia = true;
+                }
+                // if (punto.x == puntoGuardado.x && punto.y == puntoGuardado.y) {
+                //     coincidencia = true
+                // }
+            });
+            return coincidencia;
+        }
+        puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior) {
+            let PuntosDentroDelRango = [];
+            this.puntos.forEach(punto => {
+                if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
+                    PuntosDentroDelRango.push(punto);
+                }
+            });
+            this.puntosRepetidos.forEach(punto => {
+                if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
+                    PuntosDentroDelRango.push(punto);
+                }
+            });
+            if (this.subDivisiones.length > 0) {
+                this.subDivisiones.forEach(subdivision => {
+                    PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior));
+                });
+            }
+            return PuntosDentroDelRango;
+        }
+        colisionCuerpos() {
+            if (!this.subDividido) {
+                if (this.puntos.length > 1) {
+                    let cuerpos = [];
+                    this.puntos.forEach(punto => {
+                        if (punto.contenido instanceof Cuerpo) {
+                            cuerpos.push(punto.contenido);
+                        }
+                    });
+                    this.puntosRepetidos.forEach(punto => {
+                        if (punto.contenido instanceof Cuerpo) {
+                            cuerpos.push(punto.contenido);
+                        }
+                    });
+                    Interaccion.contactoSimple(cuerpos);
+                }
+            }
+            else {
+                this.subDivisiones.forEach(subdivision => subdivision.colisionCuerpos());
+            }
+        }
+    }
+
+    const COMPO = Composicion.crearConIDCanvas('canvas');
     const RENDER = COMPO.render;
-    COMPO.tamanoCanvas(1080, 1080);
+    COMPO.tamanoCanvas(800, 800);
     const ENTORNO = Entorno.crearEntornoCanvas(RENDER.canvas);
     //COLORES
     const ColorRojas = Renderizado.colorHSL(0, 100, 40);
-    const ColorAmarillas = Renderizado.colorHSL(60, 100, 90);
+    const ColorAmarillas = Renderizado.colorHSL(60, 100, 98);
     //PARTICULAS
-    const RADIO_AMARILLAS = 6;
-    const NUMERO_AMARILLAS = 150;
-    const RADIO_ROJAS = 6;
-    const NUMERO_ROJAS = 70;
+    const RADIO_AMARILLAS = 4;
+    const NUMERO_AMARILLAS = 450;
+    const RADIO_ROJAS = 4;
+    const NUMERO_ROJAS = 200;
     //PARTICULAS AMARILLAS
     const COLOR_AMARILLAS = ColorAmarillas;
     const ParticulasAmarillas = [];
@@ -1760,15 +2041,15 @@
         ParticulasRojas.push(Roja);
     }
     //MAGNITUD INTERACCIONES
-    const RojaRoja = -0.6;
-    const RojaAmarilla = 0.4;
-    const AmarilloAmarillo = 0.6;
-    const AmarilloRojo = -1.1;
+    const RojaRoja = -0.35;
+    const RojaAmarilla = 1.0;
+    const AmarilloAmarillo = 0.13;
+    const AmarilloRojo = -0.15;
     //FUNCIONES INTERACCIONES
-    const DINSTANCIA_INTERACCION = 250;
-    const DISTANCIA_REPELER_MISMO_COLOR = 40;
-    const MAGNITUD_REPELER_MISMO_COLOR = 0.5;
-    const MAGNITUD_VELOCIDAD_MAXIMA = 1;
+    const DINSTANCIA_INTERACCION = 150;
+    const DISTANCIA_REPELER_MISMO_COLOR = 20;
+    const MAGNITUD_REPELER_MISMO_COLOR = 0.2;
+    const MAGNITUD_VELOCIDAD_MAXIMA = 0.8;
     //Reiniciar Aceleraciones
     function reiniciarAceleracion(...particulas) {
         particulas.forEach((particula) => particula.aceleracion = Vector.cero());
@@ -1821,32 +2102,30 @@
         interaccionDinstintoColor(ParticulasRojas, ParticulasAmarillas, RojaAmarilla);
     }
     //NUEVO CUADRO
-    COMPO.tick = 40;
-    COMPO.fps = 20;
-    let tiempoActual = Date.now();
-    interaccionParticulas();
-    COMPO.entorno.rebotarConBorde();
-    COMPO.contactoSimpleCuerpos();
-    COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
-    COMPO.actualizarMovimientoCuerpos();
-    console.log(Date.now() - tiempoActual);
+    COMPO.tick = 30;
+    COMPO.fps = 60;
+    COMPO.usarfpsNativos = true;
     //GRABAR
-    // Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
+    // Grabador.grabarCanvas(RENDER.canvas, 300000, 12, 'descarga')
     //ANIMAR
     COMPO.animacion(() => {
-        let tiempoActual = Date.now();
         interaccionParticulas();
-        COMPO.entorno.rebotarConBorde();
-        COMPO.contactoSimpleCuerpos();
+        let Quad = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 50);
+        COMPO.cuerpos.forEach(cuerpo => Quad.insertarPunto(cuerpo.posicion, cuerpo));
+        // Quad.colisionCuerpos()
+        COMPO.entorno.rebotarCircunferenciasConBorde();
         COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
-        COMPO.actualizarMovimientoCuerpos();
-        console.log(Date.now() - tiempoActual);
+        COMPO.moverCuerpos();
+        Quad.colisionCuerpos();
+        // COMPO.contactoSimpleCuerpos()
+        // console.log(Date.now() - tiempoActual)
     }, () => {
         RENDER.limpiarCanvas();
         COMPO.renderizarCuerpos();
-    }, false);
+    });
     // COMPO.animacion(() => {
     //     nuevoCuadro()
     // })
+    ManejadorEventos.mouseEnCanvas('click', COMPO.render.canvas, () => COMPO.animar = !COMPO.animar);
 
 })();

@@ -3,20 +3,14 @@ definan cómo interactúan las partículas según sus colores.
 
 
 Colores
-    Rojo, Verde, Amarillo
+    Rojo, blanco
 
 Interacciones
     + <- atracción
     - <- repulsión
 
-    Rojo a rojo:            +1
-    Rojo a verde:           +0.5
-    Rojo a amarillo:        -0.5
+    Rojo a rojo:            -0.35
+    Rojo a blanco:          1
 
-    Verde a rojo:           -0.5
-    Verde a verde:          +0.2
-    Verde a amarillo:       -0.2
-
-    Amarillo a rojo:        +0.2
-    Amarillo a verde:       -0.2
-    Amarillo a amarillo:    -0.4
+    Blanco a rojo:          -0.15
+    Blanco a Blanco:        0.13

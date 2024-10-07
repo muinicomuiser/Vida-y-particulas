@@ -20,7 +20,9 @@ export class Dibujante {
     context: CanvasRenderingContext2D;
 
     // opcionesCelda:
-
+    /**Opciones del método en que se graficará.     
+     * 'colorTrazo', 'colorRelleno', 'trazada', 'rellenada', 'grosorTrazo' y 'opacidad'.
+    */
     estiloForma: OpcionesGraficasForma = {
         colorTrazo: 'blue',
         colorRelleno: "skyblue",
@@ -30,7 +32,7 @@ export class Dibujante {
         opacidad: 1,
     }
 
-    /**Opciones de color, tamaño, fuente, opacidad y alineación.*/
+    /**Opciones de 'color', 'tamano', 'fuente', 'opacidad' y 'alineacion'.*/
     estiloTexto: OpcionesGraficasTexto = {
         color: "red",
         tamano: 10,
@@ -39,6 +41,9 @@ export class Dibujante {
         alineacion: "right"
     };
 
+    /**Opciones del método en que se graficará.
+    * 'color' y 'grosorTrazo'.
+    */
     estiloVector: OpcionesGraficasVector = {
         color: "red",
         grosorTrazo: 1,
@@ -84,6 +89,7 @@ export class Dibujante {
     static colorRGBA(red: number, green: number, blue: number, alpha: number) {
         return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
     }
+
 
     protected recorrerPath(forma: Forma): void {
         if (forma.tipo == TipoFormas.circunferencia) {
@@ -145,21 +151,21 @@ export class Dibujante {
         this.context.fill();
     }
 
-    /**Rellena en el canvas la forma ingresada como argumento.*/
+    /**Rellena en el canvas la celda ingresada como argumento.*/
     rellenarCelda(celda: Celda): void {
         this.context.beginPath();
-        this.context.clearRect((celda.x - 1) * celda.tamano, (celda.y - 1) * celda.tamano, celda.tamano, celda.tamano);
+        this.context.clearRect((celda.columna - 1) * celda.tamano, (celda.fila - 1) * celda.tamano, celda.tamano, celda.tamano);
         this.context.globalAlpha = this.estiloForma.opacidad!;
         this.context.fillStyle = this.colorCelda;
         if (celda.color) {
             this.context.fillStyle = celda.color;
         }
-        this.context.fillRect((celda.x - 1) * celda.tamano, (celda.y - 1) * celda.tamano, celda.tamano, celda.tamano);
+        this.context.fillRect((celda.columna - 1) * celda.tamano, (celda.fila - 1) * celda.tamano, celda.tamano, celda.tamano);
         this.context.globalAlpha = 1;
     }
 
     /** Traza en el canvas el vector ingresado como argumento.      
-     * Usa como color el atributo colorVectores.
+     * Usa como color el atributo .estiloVector.color.
      */
     trazarVector(vector: Vector): void {
         let origen: Punto = vector.origen;
@@ -175,7 +181,9 @@ export class Dibujante {
     }
 
 
-    /**Rellena un texto en el canvas en la posicion ingresada.*/
+    /**Rellena un texto en el canvas en la posicion ingresada.          
+     * Usa como opciones gráficas el atributo .estiloTexto
+    */
     escribir(texto: string, posicionX: number, posicionY: number): void {
         this.context.textAlign = this.estiloTexto.alineacion!;
         this.context.font = `${this.estiloTexto.tamano}px ${this.estiloTexto.fuente}`;

@@ -14,10 +14,12 @@ export class Contenedor {
         this.cuerpo.fijo = true;
     }
 
+    /**Retorna el conjunto de vectores normales de cada arista del contenedor. */
     get normales(): Vector[] {
         return Vector.clonarConjunto(this.cuerpo.normales)
     }
 
+    /**Retorna un objeto Contenedor a partir de un cuerpo.*/
     static crearContenedor(cuerpo: Cuerpo): Contenedor {
         return new Contenedor(cuerpo);
     }
@@ -27,10 +29,12 @@ export class Contenedor {
         this.cuerposContenidos.push(...cuerpos)
     }
 
-    rebotarConBorde() {
+
+    rebotarCircunferenciasConBorde() {
         Interaccion.reboteCircunferenciasConEntorno(this.cuerposContenidos, this.cuerpo)
     }
 
+    /**Suma la aceleración a la velocidad y la velocidad a la posición.*/
     mover(): void {
         this.cuerpo.mover()
     }

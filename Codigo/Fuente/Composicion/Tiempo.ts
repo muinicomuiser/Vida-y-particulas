@@ -58,5 +58,4 @@ export class Tiempo {
             this.temporizadores.splice(indiceInactivo, 1);
         }
     }
-
 }

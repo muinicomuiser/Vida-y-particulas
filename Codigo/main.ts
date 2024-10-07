@@ -1,21 +1,22 @@
-import { Composicion, Cuerpo, Entorno, Fuerza, Geometria, Grabador, Matematica, Renderizado, Vector } from "./Fuente/mui.js";
+import { QuadTree } from "./Fuente/Interaccion/QuadTree.js";
+import { Composicion, Contenedor, Cuerpo, Entorno, Fuerza, Geometria, Grabador, ManejadorEventos, Matematica, Renderizado, Vector } from "./Fuente/mui.js";
 
-const COMPO: Composicion = new Composicion('canvas');
+const COMPO: Composicion = Composicion.crearConIDCanvas('canvas');
 const RENDER: Renderizado = COMPO.render;
-COMPO.tamanoCanvas(1080, 1080);
+COMPO.tamanoCanvas(800, 800);
 
 const ENTORNO: Entorno = Entorno.crearEntornoCanvas(RENDER.canvas)
 
 //COLORES
 const ColorRojas: string = Renderizado.colorHSL(0, 100, 40)
-const ColorAmarillas: string = Renderizado.colorHSL(60, 100, 90)
+const ColorAmarillas: string = Renderizado.colorHSL(60, 100, 98)
 
 //PARTICULAS
-const RADIO_AMARILLAS: number = 6;
-const NUMERO_AMARILLAS: number = 150;
+const RADIO_AMARILLAS: number = 4;
+const NUMERO_AMARILLAS: number = 450;
 
-const RADIO_ROJAS: number = 6;
-const NUMERO_ROJAS: number = 70;
+const RADIO_ROJAS: number = 4;
+const NUMERO_ROJAS: number = 200;
 
 //PARTICULAS AMARILLAS
 const COLOR_AMARILLAS: string = ColorAmarillas
@@ -47,17 +48,17 @@ for (let i: number = 0; i < NUMERO_ROJAS; i++) {
 
 
 //MAGNITUD INTERACCIONES
-const RojaRoja: number = -0.6;
-const RojaAmarilla: number = 0.4;
+const RojaRoja: number = -0.35;
+const RojaAmarilla: number = 1.0;
 
-const AmarilloAmarillo: number = 0.6;
-const AmarilloRojo: number = -1.1;
+const AmarilloAmarillo: number = 0.13;
+const AmarilloRojo: number = -0.15;
 
 //FUNCIONES INTERACCIONES
-const DINSTANCIA_INTERACCION: number = 250;
-const DISTANCIA_REPELER_MISMO_COLOR: number = 40;
-const MAGNITUD_REPELER_MISMO_COLOR: number = 0.5
-const MAGNITUD_VELOCIDAD_MAXIMA: number = 1;
+const DINSTANCIA_INTERACCION: number = 150;
+const DISTANCIA_REPELER_MISMO_COLOR: number = 20;
+const MAGNITUD_REPELER_MISMO_COLOR: number = 0.2;
+const MAGNITUD_VELOCIDAD_MAXIMA: number = 0.8;
 
 //Reiniciar Aceleraciones
 function reiniciarAceleracion(...particulas: Cuerpo[]) {
@@ -105,6 +106,7 @@ COMPO.entorno = ENTORNO;
 COMPO.entorno.agregarCuerposContenidos(...ParticulasAmarillas)
 COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas)
 
+
 //EJECUCIÓN DE INTERACCIONES
 function interaccionParticulas() {
     reiniciarAceleracion(...ParticulasAmarillas)
@@ -121,44 +123,33 @@ function interaccionParticulas() {
 }
 
 //NUEVO CUADRO
-COMPO.tick = 40;
-COMPO.fps = 20;
-function nuevoCuadro() {
-    RENDER.limpiarCanvas()
-    interaccionParticulas()
-    // COMPO.bordesEntornoInfinitos(ENTORNO)
-    COMPO.entorno.rebotarConBorde()
-    COMPO.contactoSimpleCuerpos()
-    COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
-    COMPO.actualizarMovimientoCuerpos()
-    COMPO.renderizarCuerpos()
-}
-let tiempoActual: number = Date.now()
-interaccionParticulas()
-COMPO.entorno.rebotarConBorde()
-COMPO.contactoSimpleCuerpos()
-COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
-COMPO.actualizarMovimientoCuerpos()
-console.log(Date.now() - tiempoActual)
-
+COMPO.tick = 30;
+COMPO.fps = 60;
+COMPO.usarfpsNativos = true;
 
 //GRABAR
-// Grabador.grabarCanvas(RENDER.canvas, 50000, 60, 'descarga')
+// Grabador.grabarCanvas(RENDER.canvas, 300000, 12, 'descarga')
 
 
 //ANIMAR
 COMPO.animacion(() => {
     let tiempoActual: number = Date.now()
     interaccionParticulas()
-    COMPO.entorno.rebotarConBorde()
-    COMPO.contactoSimpleCuerpos()
+    let Quad: QuadTree = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 50);
+    COMPO.cuerpos.forEach(cuerpo => Quad.insertarPunto(cuerpo.posicion, cuerpo))
+    // Quad.colisionCuerpos()
+    COMPO.entorno.rebotarCircunferenciasConBorde()
     COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
-    COMPO.actualizarMovimientoCuerpos()
-    console.log(Date.now() - tiempoActual)
+    COMPO.moverCuerpos()
+    Quad.colisionCuerpos()
+    // COMPO.contactoSimpleCuerpos()
+    // console.log(Date.now() - tiempoActual)
 }, () => {
     RENDER.limpiarCanvas();
     COMPO.renderizarCuerpos();
-}, false)
+})
 // COMPO.animacion(() => {
 //     nuevoCuadro()
 // })
+
+ManejadorEventos.mouseEnCanvas('click', COMPO.render.canvas, () => COMPO.animar = !COMPO.animar)

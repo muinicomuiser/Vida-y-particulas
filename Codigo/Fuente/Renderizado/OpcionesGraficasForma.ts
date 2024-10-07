@@ -5,7 +5,7 @@ export interface OpcionesGraficasForma {
     colorTrazo?: string,
     /**Color de relleno de la forma.*/
     colorRelleno?: string,
-    /**Escala de la forma. Por defecto: 1.*/
+    /**Determina si la forma debe ser trazada.*/
     trazada?: boolean,
     /**Determina si la forma debe ser rellenada.*/
     rellenada?: boolean,

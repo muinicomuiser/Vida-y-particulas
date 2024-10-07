@@ -9,7 +9,7 @@ import { Colision } from "./Colision.js";
 
 export class Interaccion {
     static get iteraciones(): number {
-        return 5;
+        return 1;
     }
 
     /**Retorna una copia del conjunto de cuerpos con la resolución de rebote para cuerpos que han colisionado.      */
@@ -47,6 +47,7 @@ export class Interaccion {
 
     /**Retorna una copia del conjunto de cuerpos con la resolución de contacto sólido para cuerpos que han colisionado.      */
     static contactoSimple(cuerpos: Cuerpo[]): Cuerpo[] {
+        // console.log('Comprobando')
         for (let iteracion: number = 0; iteracion < Interaccion.iteraciones; iteracion++) {
             // let cuerposRebotados: Cuerpo[] = [];
             for (let i: number = 0; i < cuerpos.length - 1; i++) {
@@ -94,6 +95,8 @@ export class Interaccion {
             if (solapamiento != null) {
                 let normal: Vector = Colision.normalContactoConEntorno(circunferencias[i], entorno);
                 let normalInvertida: Vector = Vector.invertir(normal)
+                // circunferencias[i].velocidad = Cinematica.reboteElastico(circunferencias[i], entorno)[0]
+                // circunferencias[i].velocidad = Vector.invertir(Cinematica.reboteElastico(circunferencias[i], entorno)[0])
                 circunferencias[i].velocidad = Cinematica.reboteSimple(circunferencias[i], normalInvertida)
                 circunferencias[i].posicion = Vector.suma(circunferencias[i].posicion, Interaccion.resolverSolapamientoEntorno(normalInvertida, solapamiento))
             }

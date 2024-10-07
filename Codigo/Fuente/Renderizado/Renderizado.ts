@@ -14,7 +14,7 @@ export class Renderizado extends Dibujante {
     private _anchoCanvas: number = 500;
     private _altoCanvas: number = 500;
     private _colorFondo: string = 'black';
-    constructor(canvas: HTMLCanvasElement) {
+    private constructor(canvas: HTMLCanvasElement) {
         super(canvas.getContext("2d")!);
         this.canvas = canvas;
         this.canvas.style.backgroundColor = this._colorFondo;
@@ -61,10 +61,16 @@ export class Renderizado extends Dibujante {
     }
 
     /**Retorna una instancia de renderizado usando como parámetro el id de un canvas presente en el documento HTML. */
-    static crearPorIdCanvas(idCanvas: string): Renderizado {
+    static crearConIdCanvas(idCanvas: string): Renderizado {
         const CANVAS: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById(idCanvas);
         let nuevoRenderizador: Renderizado = new Renderizado(CANVAS);
         return nuevoRenderizador;
+    }
+
+    /**Retorna una instancia de renderizado usando como parámetro el canvas presente en el documento HTML. */
+    static crearConCanvas(canvas: HTMLCanvasElement): Renderizado {
+        const nuevoRender: Renderizado = new Renderizado(canvas);
+        return nuevoRender;
     }
 
     /**Traza un conjunto de formas.*/
