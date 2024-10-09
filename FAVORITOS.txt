@@ -1,0 +1,20 @@
+tamanoCanvas(1080, 1080);
+
+//PARTICULAS
+const RADIO_AMARILLAS: number = 4;
+const NUMERO_AMARILLAS: number = 450;
+
+const RADIO_ROJAS: number = 4;
+const NUMERO_ROJAS: number = 200;
+
+const RojaRoja: number = -0.6;
+const RojaAmarilla: number = 0.9;
+
+const AmarilloAmarillo: number = 0.085;
+const AmarilloRojo: number = -0.1;
+
+//FUNCIONES INTERACCIONES
+const DINSTANCIA_INTERACCION: number = 180;
+const DISTANCIA_REPELER_MISMO_COLOR: number = 20;
+const MAGNITUD_REPELER_MISMO_COLOR: number = 0.3;
+const MAGNITUD_VELOCIDAD_MAXIMA: number = 0.8;

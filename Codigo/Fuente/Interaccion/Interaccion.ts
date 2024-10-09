@@ -9,7 +9,7 @@ import { Colision } from "./Colision.js";
 
 export class Interaccion {
     static get iteraciones(): number {
-        return 1;
+        return 2;
     }
 
     /**Retorna una copia del conjunto de cuerpos con la resolución de rebote para cuerpos que han colisionado.      */

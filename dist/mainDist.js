@@ -658,7 +658,7 @@
     */
     class Colision {
         static get iteraciones() {
-            return 2;
+            return 1;
         }
         /**Detecta colisiones usando el teorema SAT entre formas de tipo circunferencia y/o polígono.
          * Retorna true si detecta una colisión.
@@ -849,7 +849,7 @@
     //Interacciones entre cuerpos.
     class Interaccion {
         static get iteraciones() {
-            return 1;
+            return 2;
         }
         /**Retorna una copia del conjunto de cuerpos con la resolución de rebote para cuerpos que han colisionado.      */
         static reboteEntreCuerpos(cuerpos) {
@@ -1865,6 +1865,7 @@
             this.puntos = [];
             this.puntosRepetidos = [];
             this.subDivisiones = [];
+            this.identificador = 1;
             this.x = x;
             this.y = y;
             this.ancho = ancho;
@@ -1875,6 +1876,10 @@
         /**Agrega un punto a un QuadTree. Si al agregar el punto se sobrepasa la capacidad del QuadTree, se subdivide en cuatro QuadTrees nuevos. */
         insertarPunto(punto, contenido) {
             let puntoInsertado = contenido != undefined ? { x: punto.x, y: punto.y, contenido: contenido } : punto;
+            if (puntoInsertado.id == undefined) {
+                puntoInsertado.id = this.identificador;
+                this.identificador++;
+            }
             if (this.comprobarInsercion(puntoInsertado)) {
                 if (this.buscarPuntoRepetido(puntoInsertado)) {
                     console.log('Repetido');
@@ -1950,7 +1955,7 @@
         buscarPuntoRepetido(punto) {
             let coincidencia = false;
             this.puntos.forEach((puntoGuardado) => {
-                if (Matematica.compararNumeros(punto.x, puntoGuardado.x, 0.000000001) && Matematica.compararNumeros(punto.y, puntoGuardado.y, 0.000000001)) {
+                if (Matematica.compararNumeros(punto.x, puntoGuardado.x) && Matematica.compararNumeros(punto.y, puntoGuardado.y)) {
                     console.log('repetido');
                     coincidencia = true;
                 }
@@ -1960,25 +1965,42 @@
             });
             return coincidencia;
         }
-        puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior) {
-            let PuntosDentroDelRango = [];
+        puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, arregloPuntos = []) {
+            let PuntosDentroDelRango = arregloPuntos;
             this.puntos.forEach(punto => {
                 if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                    PuntosDentroDelRango.push(punto);
+                    if (punto.id != undefined) {
+                        if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                            PuntosDentroDelRango.push(punto);
+                        }
+                    }
+                    else {
+                        PuntosDentroDelRango.push(punto);
+                    }
                 }
             });
             this.puntosRepetidos.forEach(punto => {
                 if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                    PuntosDentroDelRango.push(punto);
+                    if (punto.id != undefined) {
+                        if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                            PuntosDentroDelRango.push(punto);
+                        }
+                    }
+                    else {
+                        PuntosDentroDelRango.push(punto);
+                    }
                 }
             });
             if (this.subDivisiones.length > 0) {
                 this.subDivisiones.forEach(subdivision => {
-                    PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior));
+                    subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, PuntosDentroDelRango);
+                    // PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
                 });
             }
             return PuntosDentroDelRango;
         }
+        // puntosEnRangoRadial(radio: number): Punto[] {
+        // }
         colisionCuerpos() {
             if (!this.subDividido) {
                 if (this.puntos.length > 1) {
@@ -2004,17 +2026,19 @@
 
     const COMPO = Composicion.crearConIDCanvas('canvas');
     const RENDER = COMPO.render;
-    COMPO.tamanoCanvas(800, 800);
+    COMPO.tamanoCanvas(600, 600);
+    RENDER.colorCanvas = Renderizado.colorHSL(250, 50, 0);
     const ENTORNO = Entorno.crearEntornoCanvas(RENDER.canvas);
     //COLORES
-    const ColorRojas = Renderizado.colorHSL(0, 100, 40);
-    const ColorAmarillas = Renderizado.colorHSL(60, 100, 98);
+    const ColorRojas = Renderizado.colorHSL(0, 100, 50);
+    const ColorAmarillas = Renderizado.colorHSL(45, 90, 90);
     //PARTICULAS
-    const RADIO_AMARILLAS = 4;
-    const NUMERO_AMARILLAS = 450;
-    const RADIO_ROJAS = 4;
+    const RADIO_AMARILLAS = 3;
+    const NUMERO_AMARILLAS = 400;
+    const RADIO_ROJAS = 3;
     const NUMERO_ROJAS = 200;
     //PARTICULAS AMARILLAS
+    let IdentificadorParticula = 1;
     const COLOR_AMARILLAS = ColorAmarillas;
     const ParticulasAmarillas = [];
     for (let i = 0; i < NUMERO_AMARILLAS; i++) {
@@ -2025,7 +2049,9 @@
             colorRelleno: COLOR_AMARILLAS,
             trazada: false,
         };
+        Amarilla.id = IdentificadorParticula;
         ParticulasAmarillas.push(Amarilla);
+        IdentificadorParticula++;
     }
     //PARTICULAS ROJAS
     const COLOR_ROJAS = ColorRojas;
@@ -2038,17 +2064,19 @@
             colorRelleno: COLOR_ROJAS,
             trazada: false,
         };
+        Roja.id = IdentificadorParticula;
         ParticulasRojas.push(Roja);
+        IdentificadorParticula++;
     }
     //MAGNITUD INTERACCIONES
-    const RojaRoja = -0.35;
-    const RojaAmarilla = 1.0;
-    const AmarilloAmarillo = 0.13;
-    const AmarilloRojo = -0.15;
+    const RojaRoja = -0.05;
+    const RojaAmarilla = 0.09;
+    const AmarilloAmarillo = 0.009;
+    const AmarilloRojo = -0.012;
     //FUNCIONES INTERACCIONES
-    const DINSTANCIA_INTERACCION = 150;
-    const DISTANCIA_REPELER_MISMO_COLOR = 20;
-    const MAGNITUD_REPELER_MISMO_COLOR = 0.2;
+    const DISTANCIA_INTERACCION = 150;
+    const DISTANCIA_REPELER_MISMO_COLOR = 8;
+    const MAGNITUD_REPELER_MISMO_COLOR = 0.8;
     const MAGNITUD_VELOCIDAD_MAXIMA = 0.8;
     //Reiniciar Aceleraciones
     function reiniciarAceleracion(...particulas) {
@@ -2058,7 +2086,7 @@
     function interaccionMismoColor(Particulas, magnitud, magnitudRepeler) {
         for (let i = 0; i < Particulas.length - 1; i++) {
             for (let j = i + 1; j < Particulas.length; j++) {
-                if (Geometria.distanciaEntrePuntos(Particulas[i].posicion, Particulas[j].posicion) < DINSTANCIA_INTERACCION) {
+                if (Geometria.distanciaEntrePuntos(Particulas[i].posicion, Particulas[j].posicion) < DISTANCIA_INTERACCION) {
                     if (Geometria.distanciaEntrePuntos(Particulas[i].posicion, Particulas[j].posicion) < DISTANCIA_REPELER_MISMO_COLOR) {
                         let aceleracion = Fuerza.repeler(Particulas[i], Particulas[j], magnitudRepeler);
                         Particulas[i].aceleracion = Vector.suma(Particulas[i].aceleracion, aceleracion);
@@ -2077,7 +2105,7 @@
     function interaccionDinstintoColor(ParticulasUno, ParticulasDos, magnitud) {
         for (let i = 0; i < ParticulasUno.length; i++) {
             for (let j = 0; j < ParticulasDos.length; j++) {
-                if (Geometria.distanciaEntrePuntos(ParticulasUno[i].posicion, ParticulasDos[j].posicion) < DINSTANCIA_INTERACCION) {
+                if (Geometria.distanciaEntrePuntos(ParticulasUno[i].posicion, ParticulasDos[j].posicion) < DISTANCIA_INTERACCION) {
                     let aceleracion = magnitud > 0 ? Fuerza.atraer(ParticulasUno[i], ParticulasDos[j], magnitud) : Fuerza.repeler(ParticulasUno[i], ParticulasDos[j], Math.abs(magnitud));
                     ParticulasUno[i].aceleracion = Vector.suma(ParticulasUno[i].aceleracion, aceleracion);
                 }
@@ -2102,30 +2130,45 @@
         interaccionDinstintoColor(ParticulasRojas, ParticulasAmarillas, RojaAmarilla);
     }
     //NUEVO CUADRO
-    COMPO.tick = 30;
-    COMPO.fps = 60;
+    COMPO.tick = 20;
+    COMPO.fps = 3;
     COMPO.usarfpsNativos = true;
     //GRABAR
-    // Grabador.grabarCanvas(RENDER.canvas, 300000, 12, 'descarga')
+    // Grabador.grabarCanvas(RENDER.canvas, 600000, 20, 'descarga')
+    let contadorCalculos = 1;
+    let tiempoInicio = Date.now();
     //ANIMAR
     COMPO.animacion(() => {
         interaccionParticulas();
-        let Quad = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 50);
+        let Quad = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 20);
         COMPO.cuerpos.forEach(cuerpo => Quad.insertarPunto(cuerpo.posicion, cuerpo));
-        // Quad.colisionCuerpos()
+        // COMPO.cuerpos.forEach(cuerpo => {
+        //     cuerpo.aceleracion = Vector.cero()
+        //     let puntosEnRango: Punto[] = Quad.puntosEnRango(cuerpo.posicion.x - DISTANCIA_INTERACCION, cuerpo.posicion.x + DISTANCIA_INTERACCION, cuerpo.posicion.y - DISTANCIA_INTERACCION, cuerpo.posicion.y + DISTANCIA_INTERACCION);
+        //     for (let punto of puntosEnRango) {
+        //         if (punto.contenido instanceof Cuerpo) {
+        //             interaccionEnRango(cuerpo, punto.contenido)
+        //         }
+        //     }
+        // })
+        // COMPO.contactoSimpleCuerpos()
+        Quad.colisionCuerpos();
         COMPO.entorno.rebotarCircunferenciasConBorde();
         COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
         COMPO.moverCuerpos();
-        Quad.colisionCuerpos();
-        // COMPO.contactoSimpleCuerpos()
-        // console.log(Date.now() - tiempoActual)
+        // Quad.colisionCuerpos()
+        // console.log((Date.now() - tiempoActual))
+        console.log((Date.now() - tiempoInicio) / contadorCalculos);
+        contadorCalculos++;
+        if (contadorCalculos > 100) {
+            console.log('------------------------------------------');
+            contadorCalculos = 1;
+            tiempoInicio = Date.now();
+        }
     }, () => {
         RENDER.limpiarCanvas();
         COMPO.renderizarCuerpos();
     });
-    // COMPO.animacion(() => {
-    //     nuevoCuadro()
-    // })
     ManejadorEventos.mouseEnCanvas('click', COMPO.render.canvas, () => COMPO.animar = !COMPO.animar);
 
 })();

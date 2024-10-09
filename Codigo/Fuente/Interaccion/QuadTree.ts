@@ -23,6 +23,7 @@ export class QuadTree {
     capacidad: number;
     subDivisiones: QuadTree[] = [];
     contorno: Forma;
+    identificador: number = 1;
     constructor(x: number, y: number, ancho: number, alto: number, capacidad: number = 4) {
         this.x = x;
         this.y = y;
@@ -35,7 +36,10 @@ export class QuadTree {
     /**Agrega un punto a un QuadTree. Si al agregar el punto se sobrepasa la capacidad del QuadTree, se subdivide en cuatro QuadTrees nuevos. */
     insertarPunto(punto: Punto, contenido?: Forma): boolean {
         let puntoInsertado: Punto = contenido != undefined ? { x: punto.x, y: punto.y, contenido: contenido } : punto;
-
+        if (puntoInsertado.id == undefined) {
+            puntoInsertado.id = this.identificador;
+            this.identificador++
+        }
         if (this.comprobarInsercion(puntoInsertado)) {
             if (this.buscarPuntoRepetido(puntoInsertado)) {
                 console.log('Repetido')
@@ -106,17 +110,17 @@ export class QuadTree {
         }
     }
 
-    formaCuadrante(): Forma {
+    private formaCuadrante(): Forma {
         const centroX: number = this.x + (this.ancho / 2)
         const centroY: number = this.y + (this.alto / 2)
 
         return Forma.rectangulo(centroX, centroY, this.ancho, this.alto)
     }
 
-    buscarPuntoRepetido(punto: Punto): boolean {
+    private buscarPuntoRepetido(punto: Punto): boolean {
         let coincidencia: boolean = false;
         this.puntos.forEach((puntoGuardado) => {
-            if (Matematica.compararNumeros(punto.x, puntoGuardado.x, 0.000000001) && Matematica.compararNumeros(punto.y, puntoGuardado.y, 0.000000001)) {
+            if (Matematica.compararNumeros(punto.x, puntoGuardado.x) && Matematica.compararNumeros(punto.y, puntoGuardado.y)) {
                 console.log('repetido')
                 coincidencia = true
             }
@@ -127,25 +131,45 @@ export class QuadTree {
         return coincidencia
     }
 
-    puntosEnRango(limiteIzquierda: number, limiteDerecha: number, limiteSuperior: number, limiteInferior: number): Punto[] {
-        let PuntosDentroDelRango: Punto[] = [];
+    puntosEnRango(limiteIzquierda: number, limiteDerecha: number, limiteSuperior: number, limiteInferior: number, arregloPuntos: Punto[] = []): Punto[] {
+        let PuntosDentroDelRango: Punto[] = arregloPuntos;
         this.puntos.forEach(punto => {
             if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                PuntosDentroDelRango.push(punto)
+                if (punto.id != undefined) {
+                    if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                        PuntosDentroDelRango.push(punto)
+                    }
+                }
+                else {
+                    PuntosDentroDelRango.push(punto)
+                }
             }
         })
         this.puntosRepetidos.forEach(punto => {
             if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                PuntosDentroDelRango.push(punto)
+                if (punto.id != undefined) {
+                    if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                        PuntosDentroDelRango.push(punto)
+                    }
+                }
+                else {
+                    PuntosDentroDelRango.push(punto)
+                }
             }
         })
         if (this.subDivisiones.length > 0) {
             this.subDivisiones.forEach(subdivision => {
-                PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
+                subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, PuntosDentroDelRango)
+                // PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
             })
         }
         return PuntosDentroDelRango;
     }
+
+    // puntosEnRangoRadial(radio: number): Punto[] {
+
+    // }
+
     colisionCuerpos(): void {
         if (!this.subDividido) {
             if (this.puntos.length > 1) {
@@ -167,5 +191,4 @@ export class QuadTree {
             this.subDivisiones.forEach(subdivision => subdivision.colisionCuerpos())
         }
     }
-
 }
