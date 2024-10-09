@@ -194,13 +194,13 @@ COMPO.animacion(() => {
     COMPO.moverCuerpos()
     // Quad.colisionCuerpos()
     // console.log((Date.now() - tiempoActual))
-    console.log((Date.now() - tiempoInicio) / contadorCalculos)
-    contadorCalculos++
-    if (contadorCalculos > 100) {
-        console.log('------------------------------------------')
-        contadorCalculos = 1
-        tiempoInicio = Date.now()
-    }
+    // console.log((Date.now() - tiempoInicio) / contadorCalculos)
+    // contadorCalculos++
+    // if (contadorCalculos > 100) {
+    //     console.log('------------------------------------------')
+    //     contadorCalculos = 1
+    //     tiempoInicio = Date.now()
+    // }
 }, () => {
     RENDER.limpiarCanvas();
     COMPO.renderizarCuerpos();

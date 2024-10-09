@@ -2133,10 +2133,6 @@
     COMPO.tick = 20;
     COMPO.fps = 3;
     COMPO.usarfpsNativos = true;
-    //GRABAR
-    // Grabador.grabarCanvas(RENDER.canvas, 600000, 20, 'descarga')
-    let contadorCalculos = 1;
-    let tiempoInicio = Date.now();
     //ANIMAR
     COMPO.animacion(() => {
         interaccionParticulas();
@@ -2158,13 +2154,13 @@
         COMPO.moverCuerpos();
         // Quad.colisionCuerpos()
         // console.log((Date.now() - tiempoActual))
-        console.log((Date.now() - tiempoInicio) / contadorCalculos);
-        contadorCalculos++;
-        if (contadorCalculos > 100) {
-            console.log('------------------------------------------');
-            contadorCalculos = 1;
-            tiempoInicio = Date.now();
-        }
+        // console.log((Date.now() - tiempoInicio) / contadorCalculos)
+        // contadorCalculos++
+        // if (contadorCalculos > 100) {
+        //     console.log('------------------------------------------')
+        //     contadorCalculos = 1
+        //     tiempoInicio = Date.now()
+        // }
     }, () => {
         RENDER.limpiarCanvas();
         COMPO.renderizarCuerpos();
