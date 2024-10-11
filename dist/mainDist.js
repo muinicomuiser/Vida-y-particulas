@@ -966,34 +966,6 @@
         }
     }
 
-    //REPENSAR ESTA CLASE
-    class Contenedor {
-        constructor(cuerpo) {
-            this.cuerposContenidos = [];
-            this.cuerpo = cuerpo;
-            this.cuerpo.fijo = true;
-        }
-        /**Retorna el conjunto de vectores normales de cada arista del contenedor. */
-        get normales() {
-            return Vector.clonarConjunto(this.cuerpo.normales);
-        }
-        /**Retorna un objeto Contenedor a partir de un cuerpo.*/
-        static crearContenedor(cuerpo) {
-            return new Contenedor(cuerpo);
-        }
-        /**Agrega cuerpos al conjunto de cuerpos que estarán dentro del contenedor.*/
-        agregarCuerposContenidos(...cuerpos) {
-            this.cuerposContenidos.push(...cuerpos);
-        }
-        rebotarCircunferenciasConBorde() {
-            Interaccion.reboteCircunferenciasConEntorno(this.cuerposContenidos, this.cuerpo);
-        }
-        /**Suma la aceleración a la velocidad y la velocidad a la posición.*/
-        mover() {
-            this.cuerpo.mover();
-        }
-    }
-
     /**
             =============================================
                      * MÓDULO DE CUERPOS *
@@ -1173,6 +1145,228 @@
             if (this.controles.rotarDerecha) {
                 this.rotacion += this.controles.anguloRotacion;
             }
+        }
+    }
+
+    /**
+     * Inicio Quadtree
+     */
+    class QuadTree {
+        constructor(x, y, ancho, alto, capacidad = 4) {
+            this.subDividido = false;
+            this.puntos = [];
+            this.puntosRepetidos = [];
+            this.subDivisiones = [];
+            this.identificador = 1;
+            this.x = x;
+            this.y = y;
+            this.ancho = ancho;
+            this.alto = alto;
+            this.capacidad = capacidad;
+            this.contorno = this.formaCuadrante();
+        }
+        /**Agrega un punto a un QuadTree. Si al agregar el punto se sobrepasa la capacidad del QuadTree, se subdivide en cuatro QuadTrees nuevos. */
+        insertarPunto(punto, contenido) {
+            let puntoInsertado = contenido != undefined ? { x: punto.x, y: punto.y, contenido: contenido } : punto;
+            if (puntoInsertado.id == undefined) {
+                puntoInsertado.id = this.identificador;
+                this.identificador++;
+            }
+            if (this.comprobarInsercion(puntoInsertado)) {
+                if (this.buscarPuntoRepetido(puntoInsertado)) {
+                    console.log('Repetido');
+                    return true;
+                    // this.puntosRepetidos.push(puntoInsertado)
+                }
+                if (this.puntos.length < this.capacidad) {
+                    this.puntos.push(puntoInsertado);
+                    return true;
+                }
+                else {
+                    if (!this.subDividido) {
+                        let quadSurEste = new QuadTree(this.x + this.ancho / 2, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad);
+                        let quadSurOeste = new QuadTree(this.x, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad);
+                        let quadNorOeste = new QuadTree(this.x, this.y, this.ancho / 2, this.alto / 2, this.capacidad);
+                        let quadNorEste = new QuadTree(this.x + this.ancho / 2, this.y, this.ancho / 2, this.alto / 2, this.capacidad);
+                        this.subDivisiones.push(quadSurEste, quadSurOeste, quadNorOeste, quadNorEste);
+                        this.puntos.forEach(puntoGuardado => {
+                            quadSurEste.insertarPunto(puntoGuardado);
+                            quadSurOeste.insertarPunto(puntoGuardado);
+                            quadNorOeste.insertarPunto(puntoGuardado);
+                            quadNorEste.insertarPunto(puntoGuardado);
+                        });
+                        // this.puntosRepetidos.forEach(puntoGuardado => {
+                        //     quadSurEste.insertarPunto(puntoGuardado);
+                        //     quadSurOeste.insertarPunto(puntoGuardado);
+                        //     quadNorOeste.insertarPunto(puntoGuardado);
+                        //     quadNorEste.insertarPunto(puntoGuardado);
+                        // })
+                        this.subDividido = true;
+                        return true;
+                    }
+                    else {
+                        this.subDivisiones[0].insertarPunto(puntoInsertado);
+                        this.subDivisiones[1].insertarPunto(puntoInsertado);
+                        this.subDivisiones[2].insertarPunto(puntoInsertado);
+                        this.subDivisiones[3].insertarPunto(puntoInsertado);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        comprobarInsercion(punto) {
+            if (punto.contenido) {
+                if ((punto.x + punto.contenido.radio >= this.x && punto.x - punto.contenido.radio <= this.x + this.ancho)
+                    && (punto.y + punto.contenido.radio >= this.y && punto.y - punto.contenido.radio <= this.y + this.alto)) {
+                    return true;
+                }
+                return false;
+            }
+            else {
+                if (punto.x >= this.x && punto.x <= this.x + this.ancho && punto.y >= this.y && punto.y <= this.y + this.alto) {
+                    return true;
+                }
+                return false;
+            }
+        }
+        trazar(dibujante, opciones) {
+            if (opciones) {
+                this.contorno.estiloGrafico = opciones;
+            }
+            this.contorno.trazar(dibujante);
+            if (this.subDivisiones.length > 0) {
+                this.subDivisiones.forEach(sub => sub.trazar(dibujante, opciones));
+            }
+        }
+        formaCuadrante() {
+            const centroX = this.x + (this.ancho / 2);
+            const centroY = this.y + (this.alto / 2);
+            return Forma.rectangulo(centroX, centroY, this.ancho, this.alto);
+        }
+        buscarPuntoRepetido(punto) {
+            let coincidencia = false;
+            this.puntos.forEach((puntoGuardado) => {
+                if (Matematica.compararNumeros(punto.x, puntoGuardado.x) && Matematica.compararNumeros(punto.y, puntoGuardado.y)) {
+                    console.log('repetido');
+                    coincidencia = true;
+                }
+                // if (punto.x == puntoGuardado.x && punto.y == puntoGuardado.y) {
+                //     coincidencia = true
+                // }
+            });
+            return coincidencia;
+        }
+        puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, arregloPuntos = []) {
+            let PuntosDentroDelRango = arregloPuntos;
+            if (this.x <= limiteDerecha && this.x + this.ancho >= limiteIzquierda && this.y <= limiteInferior && this.y + this.alto >= limiteSuperior) {
+                if (this.x >= limiteIzquierda && this.x + this.ancho <= limiteDerecha && this.y >= limiteSuperior && this.y + this.alto <= limiteInferior) {
+                    this.puntos.forEach(punto => {
+                        if (punto.id != undefined) {
+                            if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                                PuntosDentroDelRango.push(punto);
+                            }
+                        }
+                        else {
+                            PuntosDentroDelRango.push(punto);
+                        }
+                    });
+                    this.puntosRepetidos.forEach(punto => {
+                        if (punto.id != undefined) {
+                            if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                                PuntosDentroDelRango.push(punto);
+                            }
+                        }
+                        else {
+                            PuntosDentroDelRango.push(punto);
+                        }
+                    });
+                }
+                else {
+                    this.puntos.forEach(punto => {
+                        if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
+                            if (punto.id != undefined) {
+                                if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                                    PuntosDentroDelRango.push(punto);
+                                }
+                            }
+                            else {
+                                PuntosDentroDelRango.push(punto);
+                            }
+                        }
+                    });
+                    this.puntosRepetidos.forEach(punto => {
+                        if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
+                            if (punto.id != undefined) {
+                                if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                                    PuntosDentroDelRango.push(punto);
+                                }
+                            }
+                            else {
+                                PuntosDentroDelRango.push(punto);
+                            }
+                        }
+                    });
+                }
+                if (this.subDivisiones.length > 0) {
+                    this.subDivisiones.forEach(subdivision => {
+                        subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, PuntosDentroDelRango);
+                        // PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
+                    });
+                }
+            }
+            return PuntosDentroDelRango;
+        }
+        // puntosEnRangoRadial(radio: number): Punto[] {
+        // }
+        colisionCuerpos() {
+            if (!this.subDividido) {
+                if (this.puntos.length > 1) {
+                    let cuerpos = [];
+                    this.puntos.forEach(punto => {
+                        if (punto.contenido instanceof Cuerpo) {
+                            cuerpos.push(punto.contenido);
+                        }
+                    });
+                    this.puntosRepetidos.forEach(punto => {
+                        if (punto.contenido instanceof Cuerpo) {
+                            cuerpos.push(punto.contenido);
+                        }
+                    });
+                    Interaccion.contactoSimple(cuerpos);
+                }
+            }
+            else {
+                this.subDivisiones.forEach(subdivision => subdivision.colisionCuerpos());
+            }
+        }
+    }
+
+    //REPENSAR ESTA CLASE
+    class Contenedor {
+        constructor(cuerpo) {
+            this.cuerposContenidos = [];
+            this.cuerpo = cuerpo;
+            this.cuerpo.fijo = true;
+        }
+        /**Retorna el conjunto de vectores normales de cada arista del contenedor. */
+        get normales() {
+            return Vector.clonarConjunto(this.cuerpo.normales);
+        }
+        /**Retorna un objeto Contenedor a partir de un cuerpo.*/
+        static crearContenedor(cuerpo) {
+            return new Contenedor(cuerpo);
+        }
+        /**Agrega cuerpos al conjunto de cuerpos que estarán dentro del contenedor.*/
+        agregarCuerposContenidos(...cuerpos) {
+            this.cuerposContenidos.push(...cuerpos);
+        }
+        rebotarCircunferenciasConBorde() {
+            Interaccion.reboteCircunferenciasConEntorno(this.cuerposContenidos, this.cuerpo);
+        }
+        /**Suma la aceleración a la velocidad y la velocidad a la posición.*/
+        mover() {
+            this.cuerpo.mover();
         }
     }
 
@@ -1856,174 +2050,6 @@
         menos: '-',
     };
 
-    /**
-     * Inicio Quadtree
-     */
-    class QuadTree {
-        constructor(x, y, ancho, alto, capacidad = 4) {
-            this.subDividido = false;
-            this.puntos = [];
-            this.puntosRepetidos = [];
-            this.subDivisiones = [];
-            this.identificador = 1;
-            this.x = x;
-            this.y = y;
-            this.ancho = ancho;
-            this.alto = alto;
-            this.capacidad = capacidad;
-            this.contorno = this.formaCuadrante();
-        }
-        /**Agrega un punto a un QuadTree. Si al agregar el punto se sobrepasa la capacidad del QuadTree, se subdivide en cuatro QuadTrees nuevos. */
-        insertarPunto(punto, contenido) {
-            let puntoInsertado = contenido != undefined ? { x: punto.x, y: punto.y, contenido: contenido } : punto;
-            if (puntoInsertado.id == undefined) {
-                puntoInsertado.id = this.identificador;
-                this.identificador++;
-            }
-            if (this.comprobarInsercion(puntoInsertado)) {
-                if (this.buscarPuntoRepetido(puntoInsertado)) {
-                    console.log('Repetido');
-                    return true;
-                    // this.puntosRepetidos.push(puntoInsertado)
-                }
-                if (this.puntos.length < this.capacidad) {
-                    this.puntos.push(puntoInsertado);
-                    return true;
-                }
-                else {
-                    if (!this.subDividido) {
-                        let quadSurEste = new QuadTree(this.x + this.ancho / 2, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad);
-                        let quadSurOeste = new QuadTree(this.x, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad);
-                        let quadNorOeste = new QuadTree(this.x, this.y, this.ancho / 2, this.alto / 2, this.capacidad);
-                        let quadNorEste = new QuadTree(this.x + this.ancho / 2, this.y, this.ancho / 2, this.alto / 2, this.capacidad);
-                        this.subDivisiones.push(quadSurEste, quadSurOeste, quadNorOeste, quadNorEste);
-                        this.puntos.forEach(puntoGuardado => {
-                            quadSurEste.insertarPunto(puntoGuardado);
-                            quadSurOeste.insertarPunto(puntoGuardado);
-                            quadNorOeste.insertarPunto(puntoGuardado);
-                            quadNorEste.insertarPunto(puntoGuardado);
-                        });
-                        // this.puntosRepetidos.forEach(puntoGuardado => {
-                        //     quadSurEste.insertarPunto(puntoGuardado);
-                        //     quadSurOeste.insertarPunto(puntoGuardado);
-                        //     quadNorOeste.insertarPunto(puntoGuardado);
-                        //     quadNorEste.insertarPunto(puntoGuardado);
-                        // })
-                        this.subDividido = true;
-                        return true;
-                    }
-                    else {
-                        this.subDivisiones[0].insertarPunto(puntoInsertado);
-                        this.subDivisiones[1].insertarPunto(puntoInsertado);
-                        this.subDivisiones[2].insertarPunto(puntoInsertado);
-                        this.subDivisiones[3].insertarPunto(puntoInsertado);
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        comprobarInsercion(punto) {
-            if (punto.contenido) {
-                if ((punto.x + punto.contenido.radio >= this.x && punto.x - punto.contenido.radio <= this.x + this.ancho)
-                    && (punto.y + punto.contenido.radio >= this.y && punto.y - punto.contenido.radio <= this.y + this.alto)) {
-                    return true;
-                }
-                return false;
-            }
-            else {
-                if (punto.x >= this.x && punto.x <= this.x + this.ancho && punto.y >= this.y && punto.y <= this.y + this.alto) {
-                    return true;
-                }
-                return false;
-            }
-        }
-        trazar(dibujante, opciones) {
-            if (opciones) {
-                this.contorno.estiloGrafico = opciones;
-            }
-            this.contorno.trazar(dibujante);
-            if (this.subDivisiones.length > 0) {
-                this.subDivisiones.forEach(sub => sub.trazar(dibujante, opciones));
-            }
-        }
-        formaCuadrante() {
-            const centroX = this.x + (this.ancho / 2);
-            const centroY = this.y + (this.alto / 2);
-            return Forma.rectangulo(centroX, centroY, this.ancho, this.alto);
-        }
-        buscarPuntoRepetido(punto) {
-            let coincidencia = false;
-            this.puntos.forEach((puntoGuardado) => {
-                if (Matematica.compararNumeros(punto.x, puntoGuardado.x) && Matematica.compararNumeros(punto.y, puntoGuardado.y)) {
-                    console.log('repetido');
-                    coincidencia = true;
-                }
-                // if (punto.x == puntoGuardado.x && punto.y == puntoGuardado.y) {
-                //     coincidencia = true
-                // }
-            });
-            return coincidencia;
-        }
-        puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, arregloPuntos = []) {
-            let PuntosDentroDelRango = arregloPuntos;
-            this.puntos.forEach(punto => {
-                if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                    if (punto.id != undefined) {
-                        if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
-                            PuntosDentroDelRango.push(punto);
-                        }
-                    }
-                    else {
-                        PuntosDentroDelRango.push(punto);
-                    }
-                }
-            });
-            this.puntosRepetidos.forEach(punto => {
-                if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                    if (punto.id != undefined) {
-                        if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
-                            PuntosDentroDelRango.push(punto);
-                        }
-                    }
-                    else {
-                        PuntosDentroDelRango.push(punto);
-                    }
-                }
-            });
-            if (this.subDivisiones.length > 0) {
-                this.subDivisiones.forEach(subdivision => {
-                    subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, PuntosDentroDelRango);
-                    // PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
-                });
-            }
-            return PuntosDentroDelRango;
-        }
-        // puntosEnRangoRadial(radio: number): Punto[] {
-        // }
-        colisionCuerpos() {
-            if (!this.subDividido) {
-                if (this.puntos.length > 1) {
-                    let cuerpos = [];
-                    this.puntos.forEach(punto => {
-                        if (punto.contenido instanceof Cuerpo) {
-                            cuerpos.push(punto.contenido);
-                        }
-                    });
-                    this.puntosRepetidos.forEach(punto => {
-                        if (punto.contenido instanceof Cuerpo) {
-                            cuerpos.push(punto.contenido);
-                        }
-                    });
-                    Interaccion.contactoSimple(cuerpos);
-                }
-            }
-            else {
-                this.subDivisiones.forEach(subdivision => subdivision.colisionCuerpos());
-            }
-        }
-    }
-
     const COMPO = Composicion.crearConIDCanvas('canvas');
     const RENDER = COMPO.render;
     COMPO.tamanoCanvas(600, 600);
@@ -2036,7 +2062,7 @@
     const RADIO_AMARILLAS = 3;
     const NUMERO_AMARILLAS = 400;
     const RADIO_ROJAS = 3;
-    const NUMERO_ROJAS = 200;
+    const NUMERO_ROJAS = 120;
     //PARTICULAS AMARILLAS
     let IdentificadorParticula = 1;
     const COLOR_AMARILLAS = ColorAmarillas;
@@ -2069,90 +2095,76 @@
         IdentificadorParticula++;
     }
     //MAGNITUD INTERACCIONES
-    const RojaRoja = -0.05;
+    const RojaRoja = 0.006;
     const RojaAmarilla = 0.09;
-    const AmarilloAmarillo = 0.009;
-    const AmarilloRojo = -0.012;
+    const AmarilloAmarillo = 0.01;
+    const AmarilloRojo = -0.02;
     //FUNCIONES INTERACCIONES
-    const DISTANCIA_INTERACCION = 150;
+    const DISTANCIA_INTERACCION = 50;
     const DISTANCIA_REPELER_MISMO_COLOR = 8;
-    const MAGNITUD_REPELER_MISMO_COLOR = 0.8;
+    const MAGNITUD_REPELER_MISMO_COLOR = 0.3;
     const MAGNITUD_VELOCIDAD_MAXIMA = 0.8;
-    //Reiniciar Aceleraciones
-    function reiniciarAceleracion(...particulas) {
-        particulas.forEach((particula) => particula.aceleracion = Vector.cero());
-    }
-    //Mismo Color
-    function interaccionMismoColor(Particulas, magnitud, magnitudRepeler) {
-        for (let i = 0; i < Particulas.length - 1; i++) {
-            for (let j = i + 1; j < Particulas.length; j++) {
-                if (Geometria.distanciaEntrePuntos(Particulas[i].posicion, Particulas[j].posicion) < DISTANCIA_INTERACCION) {
-                    if (Geometria.distanciaEntrePuntos(Particulas[i].posicion, Particulas[j].posicion) < DISTANCIA_REPELER_MISMO_COLOR) {
-                        let aceleracion = Fuerza.repeler(Particulas[i], Particulas[j], magnitudRepeler);
-                        Particulas[i].aceleracion = Vector.suma(Particulas[i].aceleracion, aceleracion);
-                        Particulas[j].aceleracion = Vector.suma(Particulas[j].aceleracion, Vector.invertir(aceleracion));
-                    }
-                    else {
-                        let aceleracion = magnitud > 0 ? Fuerza.atraer(Particulas[i], Particulas[j], magnitud) : Fuerza.repeler(Particulas[i], Particulas[j], Math.abs(magnitud));
-                        Particulas[i].aceleracion = Vector.suma(Particulas[i].aceleracion, aceleracion);
-                        Particulas[j].aceleracion = Vector.suma(Particulas[j].aceleracion, Vector.invertir(aceleracion));
-                    }
-                }
-            }
-        }
-    }
-    //Distinto Color
-    function interaccionDinstintoColor(ParticulasUno, ParticulasDos, magnitud) {
-        for (let i = 0; i < ParticulasUno.length; i++) {
-            for (let j = 0; j < ParticulasDos.length; j++) {
-                if (Geometria.distanciaEntrePuntos(ParticulasUno[i].posicion, ParticulasDos[j].posicion) < DISTANCIA_INTERACCION) {
-                    let aceleracion = magnitud > 0 ? Fuerza.atraer(ParticulasUno[i], ParticulasDos[j], magnitud) : Fuerza.repeler(ParticulasUno[i], ParticulasDos[j], Math.abs(magnitud));
-                    ParticulasUno[i].aceleracion = Vector.suma(ParticulasUno[i].aceleracion, aceleracion);
-                }
-            }
-        }
-    }
     //INTEGRACIÓN DE CUERPOS A COMPOSICIÓN
-    COMPO.agregarCuerpos(...ParticulasAmarillas);
-    COMPO.agregarCuerpos(...ParticulasRojas);
+    COMPO.agregarCuerpos(...ParticulasRojas, ...ParticulasAmarillas);
     COMPO.entorno = ENTORNO;
-    COMPO.entorno.agregarCuerposContenidos(...ParticulasAmarillas);
-    COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas);
+    COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas, ...ParticulasAmarillas);
     //EJECUCIÓN DE INTERACCIONES
-    function interaccionParticulas() {
-        reiniciarAceleracion(...ParticulasAmarillas);
-        reiniciarAceleracion(...ParticulasRojas);
-        //Mismo Color
-        interaccionMismoColor(ParticulasAmarillas, AmarilloAmarillo, MAGNITUD_REPELER_MISMO_COLOR);
-        interaccionMismoColor(ParticulasRojas, RojaRoja, MAGNITUD_REPELER_MISMO_COLOR);
-        //Distinto Color
-        interaccionDinstintoColor(ParticulasAmarillas, ParticulasRojas, AmarilloRojo);
-        interaccionDinstintoColor(ParticulasRojas, ParticulasAmarillas, RojaAmarilla);
+    function interaccionEnRango(particula, otraParticula) {
+        let magnitudInteraccion;
+        let mismoColor = false;
+        if (particula.id != otraParticula.id && Geometria.distanciaEntrePuntos(particula.posicion, otraParticula.posicion) < DISTANCIA_INTERACCION) {
+            if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_ROJAS) {
+                magnitudInteraccion = RojaRoja;
+                mismoColor = true;
+            }
+            else if (particula.colorRelleno == COLOR_AMARILLAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
+                magnitudInteraccion = AmarilloAmarillo;
+                mismoColor = true;
+            }
+            else if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
+                magnitudInteraccion = RojaAmarilla;
+            }
+            else {
+                magnitudInteraccion = AmarilloRojo;
+            }
+            if (mismoColor) {
+                if (Geometria.distanciaEntrePuntos(particula.posicion, otraParticula.posicion) < DISTANCIA_REPELER_MISMO_COLOR) {
+                    let aceleracionCercana = Fuerza.repeler(particula, otraParticula, MAGNITUD_REPELER_MISMO_COLOR);
+                    particula.aceleracion = Vector.suma(particula.aceleracion, aceleracionCercana);
+                }
+                else {
+                    let aceleracion = magnitudInteraccion > 0 ? Fuerza.atraer(particula, otraParticula, magnitudInteraccion) : Fuerza.repeler(particula, otraParticula, Math.abs(magnitudInteraccion));
+                    particula.aceleracion = Vector.suma(particula.aceleracion, aceleracion);
+                }
+            }
+            else {
+                let aceleracion = magnitudInteraccion > 0 ? Fuerza.atraer(particula, otraParticula, magnitudInteraccion) : Fuerza.repeler(particula, otraParticula, Math.abs(magnitudInteraccion));
+                particula.aceleracion = Vector.suma(particula.aceleracion, aceleracion);
+            }
+        }
     }
     //NUEVO CUADRO
-    COMPO.tick = 20;
+    COMPO.tick = 10;
     COMPO.fps = 3;
     COMPO.usarfpsNativos = true;
     //ANIMAR
     COMPO.animacion(() => {
-        interaccionParticulas();
-        let Quad = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 20);
+        // let tiempoActual: number = Date.now()
+        let Quad = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 10);
         COMPO.cuerpos.forEach(cuerpo => Quad.insertarPunto(cuerpo.posicion, cuerpo));
-        // COMPO.cuerpos.forEach(cuerpo => {
-        //     cuerpo.aceleracion = Vector.cero()
-        //     let puntosEnRango: Punto[] = Quad.puntosEnRango(cuerpo.posicion.x - DISTANCIA_INTERACCION, cuerpo.posicion.x + DISTANCIA_INTERACCION, cuerpo.posicion.y - DISTANCIA_INTERACCION, cuerpo.posicion.y + DISTANCIA_INTERACCION);
-        //     for (let punto of puntosEnRango) {
-        //         if (punto.contenido instanceof Cuerpo) {
-        //             interaccionEnRango(cuerpo, punto.contenido)
-        //         }
-        //     }
-        // })
-        // COMPO.contactoSimpleCuerpos()
+        COMPO.cuerpos.forEach(cuerpo => {
+            cuerpo.aceleracion = Vector.cero();
+            let puntosEnRango = Quad.puntosEnRango(cuerpo.posicion.x - DISTANCIA_INTERACCION, cuerpo.posicion.x + DISTANCIA_INTERACCION, cuerpo.posicion.y - DISTANCIA_INTERACCION, cuerpo.posicion.y + DISTANCIA_INTERACCION);
+            for (let punto of puntosEnRango) {
+                if (punto.contenido instanceof Cuerpo) {
+                    interaccionEnRango(cuerpo, punto.contenido);
+                }
+            }
+        });
         Quad.colisionCuerpos();
         COMPO.entorno.rebotarCircunferenciasConBorde();
         COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
         COMPO.moverCuerpos();
-        // Quad.colisionCuerpos()
         // console.log((Date.now() - tiempoActual))
         // console.log((Date.now() - tiempoInicio) / contadorCalculos)
         // contadorCalculos++

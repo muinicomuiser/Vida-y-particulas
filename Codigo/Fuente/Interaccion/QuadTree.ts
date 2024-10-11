@@ -10,7 +10,9 @@ import { OpcionesForma } from "../GeometriaPlana/OpcionesForma.js";
 import { Vector } from "../GeometriaPlana/Vector.js";
 import { OpcionesGraficasForma } from "../Renderizado/OpcionesGraficasForma.js";
 import { Interaccion } from "./Interaccion.js";
-import { Cuerpo, Matematica } from "../mui.js";
+import { Matematica } from "../Utiles/Matematica.js";
+import { Cuerpo } from "../Fisicas/Cuerpo.js";
+
 
 export class QuadTree {
     subDividido: boolean = false;
@@ -133,35 +135,62 @@ export class QuadTree {
 
     puntosEnRango(limiteIzquierda: number, limiteDerecha: number, limiteSuperior: number, limiteInferior: number, arregloPuntos: Punto[] = []): Punto[] {
         let PuntosDentroDelRango: Punto[] = arregloPuntos;
-        this.puntos.forEach(punto => {
-            if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                if (punto.id != undefined) {
-                    if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+        if (this.x <= limiteDerecha && this.x + this.ancho >= limiteIzquierda && this.y <= limiteInferior && this.y + this.alto >= limiteSuperior) {
+            if (this.x >= limiteIzquierda && this.x + this.ancho <= limiteDerecha && this.y >= limiteSuperior && this.y + this.alto <= limiteInferior) {
+                this.puntos.forEach(punto => {
+                    if (punto.id != undefined) {
+                        if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                            PuntosDentroDelRango.push(punto)
+                        }
+                    }
+                    else {
                         PuntosDentroDelRango.push(punto)
                     }
-                }
-                else {
-                    PuntosDentroDelRango.push(punto)
-                }
-            }
-        })
-        this.puntosRepetidos.forEach(punto => {
-            if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                if (punto.id != undefined) {
-                    if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                })
+                this.puntosRepetidos.forEach(punto => {
+                    if (punto.id != undefined) {
+                        if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                            PuntosDentroDelRango.push(punto)
+                        }
+                    }
+                    else {
                         PuntosDentroDelRango.push(punto)
                     }
-                }
-                else {
-                    PuntosDentroDelRango.push(punto)
-                }
+                });
             }
-        })
-        if (this.subDivisiones.length > 0) {
-            this.subDivisiones.forEach(subdivision => {
-                subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, PuntosDentroDelRango)
-                // PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
-            })
+            else {
+                this.puntos.forEach(punto => {
+                    if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
+                        if (punto.id != undefined) {
+                            if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                                PuntosDentroDelRango.push(punto)
+                            }
+                        }
+                        else {
+                            PuntosDentroDelRango.push(punto)
+                        }
+                    }
+                })
+                this.puntosRepetidos.forEach(punto => {
+                    if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
+                        if (punto.id != undefined) {
+                            if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                                PuntosDentroDelRango.push(punto)
+                            }
+                        }
+                        else {
+                            PuntosDentroDelRango.push(punto)
+                        }
+                    }
+                })
+            }
+
+            if (this.subDivisiones.length > 0) {
+                this.subDivisiones.forEach(subdivision => {
+                    subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, PuntosDentroDelRango)
+                    // PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
+                })
+            }
         }
         return PuntosDentroDelRango;
     }
