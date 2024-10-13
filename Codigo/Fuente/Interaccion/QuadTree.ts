@@ -2,16 +2,13 @@
  * Inicio Quadtree
  */
 
-import { Punto } from "../GeometriaPlana/Punto.js";
-import { Forma } from "../GeometriaPlana/Formas.js"
-import { Dibujante } from "../Renderizado/Dibujante.js";
-import { Geometria } from "../Utiles/Geometria.js";
-import { OpcionesForma } from "../GeometriaPlana/OpcionesForma.js";
-import { Vector } from "../GeometriaPlana/Vector.js";
-import { OpcionesGraficasForma } from "../Renderizado/OpcionesGraficasForma.js";
-import { Interaccion } from "./Interaccion.js";
-import { Matematica } from "../Utiles/Matematica.js";
 import { Cuerpo } from "../Fisicas/Cuerpo.js";
+import { Forma } from "../GeometriaPlana/Formas.js";
+import { Punto } from "../GeometriaPlana/Punto.js";
+import { Dibujante } from "../Renderizado/Dibujante.js";
+import { OpcionesGraficasForma } from "../Renderizado/OpcionesGraficasForma.js";
+import { Matematica } from "../Utiles/Matematica.js";
+import { Interaccion } from "./Interaccion.js";
 
 
 export class QuadTree {
@@ -23,6 +20,7 @@ export class QuadTree {
     ancho: number;
     alto: number;
     capacidad: number;
+    capacidadEspecifica: number;
     subDivisiones: QuadTree[] = [];
     contorno: Forma;
     identificador: number = 1;
@@ -32,6 +30,7 @@ export class QuadTree {
         this.ancho = ancho;
         this.alto = alto;
         this.capacidad = capacidad;
+        this.capacidadEspecifica = capacidad;
         this.contorno = this.formaCuadrante();
     }
 
@@ -45,10 +44,12 @@ export class QuadTree {
         if (this.comprobarInsercion(puntoInsertado)) {
             if (this.buscarPuntoRepetido(puntoInsertado)) {
                 console.log('Repetido')
+                this.puntos.push(puntoInsertado)
+                this.capacidadEspecifica++;
                 return true
                 // this.puntosRepetidos.push(puntoInsertado)
             }
-            if (this.puntos.length < this.capacidad) {
+            if (this.puntos.length < this.capacidadEspecifica) {
                 this.puntos.push(puntoInsertado)
                 return true;
             }
@@ -147,16 +148,16 @@ export class QuadTree {
                         PuntosDentroDelRango.push(punto)
                     }
                 })
-                this.puntosRepetidos.forEach(punto => {
-                    if (punto.id != undefined) {
-                        if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
-                            PuntosDentroDelRango.push(punto)
-                        }
-                    }
-                    else {
-                        PuntosDentroDelRango.push(punto)
-                    }
-                });
+                // this.puntosRepetidos.forEach(punto => {
+                //     if (punto.id != undefined) {
+                //         if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                //             PuntosDentroDelRango.push(punto)
+                //         }
+                //     }
+                //     else {
+                //         PuntosDentroDelRango.push(punto)
+                //     }
+                // });
             }
             else {
                 this.puntos.forEach(punto => {
@@ -171,18 +172,18 @@ export class QuadTree {
                         }
                     }
                 })
-                this.puntosRepetidos.forEach(punto => {
-                    if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                        if (punto.id != undefined) {
-                            if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
-                                PuntosDentroDelRango.push(punto)
-                            }
-                        }
-                        else {
-                            PuntosDentroDelRango.push(punto)
-                        }
-                    }
-                })
+                // this.puntosRepetidos.forEach(punto => {
+                //     if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
+                //         if (punto.id != undefined) {
+                //             if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
+                //                 PuntosDentroDelRango.push(punto)
+                //             }
+                //         }
+                //         else {
+                //             PuntosDentroDelRango.push(punto)
+                //         }
+                //     }
+                // })
             }
 
             if (this.subDivisiones.length > 0) {
@@ -208,11 +209,11 @@ export class QuadTree {
                         cuerpos.push(punto.contenido)
                     }
                 })
-                this.puntosRepetidos.forEach(punto => {
-                    if (punto.contenido instanceof Cuerpo) {
-                        cuerpos.push(punto.contenido)
-                    }
-                })
+                // this.puntosRepetidos.forEach(punto => {
+                //     if (punto.contenido instanceof Cuerpo) {
+                //         cuerpos.push(punto.contenido)
+                //     }
+                // })
                 Interaccion.contactoSimple(cuerpos)
             }
         }
