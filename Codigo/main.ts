@@ -3,7 +3,7 @@ import { Composicion, Cuerpo, Entorno, Fuerza, Geometria, Grabador, ManejadorEve
 
 const COMPO: Composicion = Composicion.crearConIDCanvas('canvas');
 const RENDER: Renderizado = COMPO.render;
-COMPO.tamanoCanvas(800, 800);
+COMPO.tamanoCanvas(500, 500);
 RENDER.colorCanvas = Renderizado.colorHSL(250, 50, 0)
 const ENTORNO: Entorno = Entorno.crearEntornoCanvas(RENDER.canvas)
 
@@ -12,11 +12,11 @@ const ColorRojas: string = Renderizado.colorHSL(0, 100, 50)
 const ColorAmarillas: string = Renderizado.colorHSL(45, 90, 90)
 
 //PARTICULAS
-const RADIO_AMARILLAS: number = 4;
-const NUMERO_AMARILLAS: number = 300;
+const RADIO_AMARILLAS: number = 3;
+const NUMERO_AMARILLAS: number = 400;
 
-const RADIO_ROJAS: number = 4;
-const NUMERO_ROJAS: number = 200;
+const RADIO_ROJAS: number = 3;
+const NUMERO_ROJAS: number = 300;
 
 //PARTICULAS AMARILLAS
 let IdentificadorParticula: number = 1;
@@ -53,16 +53,16 @@ for (let i: number = 0; i < NUMERO_ROJAS; i++) {
 
 
 //MAGNITUD INTERACCIONES
-const RojaRoja: number = -0.05;
-const RojaAmarilla: number = 0.02;
+const RojaRoja: number = 0.006;
+const RojaAmarilla: number = 0.032;
 
-const AmarilloAmarillo: number = 0.008;
+const AmarilloAmarillo: number = 0.019;
 const AmarilloRojo: number = -0.02;
 
 //FUNCIONES INTERACCIONES
-const DISTANCIA_INTERACCION: number = 200;
-const DISTANCIA_REPELER: number = 12;
-const MAGNITUD_REPELER: number = 0.1;
+const DISTANCIA_INTERACCION: number = 50;
+const DISTANCIA_REPELER: number = 8;
+const MAGNITUD_REPELER: number = 0.5;
 const MAGNITUD_VELOCIDAD_MAXIMA: number = 1;
 
 //INTEGRACIÓN DE CUERPOS A COMPOSICIÓN
@@ -126,12 +126,11 @@ let tiempoInicio: number = Date.now()
 //ANIMAR
 COMPO.animacion(() => {
     let tiempoActual: number = Date.now()
-    let Quad: QuadTree = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 8, 8);
+    let Quad: QuadTree = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 10, 5);
     COMPO.cuerpos.forEach(cuerpo => Quad.insertarPunto(cuerpo.posicion, cuerpo));
     COMPO.cuerpos.forEach(cuerpo => {
         cuerpo.aceleracion = Vector.cero()
-        // cuerpo.velocidad = Vector.suma(cuerpo.velocidad, Vector.crear(Matematica.aleatorio(-0.4, 0.4), Matematica.aleatorio(-0.4, 0.4)))
-        // cuerpo.aceleracion = Vector.escalar(cuerpo.aceleracion, 0.01)
+        cuerpo.velocidad = Vector.suma(cuerpo.velocidad, Vector.crear(Matematica.aleatorio(-0.1, 0.1), Matematica.aleatorio(-0.1, 0.1)))
         let puntosEnRango: Punto[] = Quad.puntosEnRango(cuerpo.posicion.x - DISTANCIA_INTERACCION, cuerpo.posicion.x + DISTANCIA_INTERACCION, cuerpo.posicion.y - DISTANCIA_INTERACCION, cuerpo.posicion.y + DISTANCIA_INTERACCION);
         for (let punto of puntosEnRango) {
             if (punto.contenido instanceof Cuerpo) {
@@ -139,21 +138,20 @@ COMPO.animacion(() => {
             }
         }
     })
-    // Quad.colisionCuerpos()
+    Quad.contactoSimpleCuerpos()
+    COMPO.moverCuerpos()
     COMPO.entorno.rebotarCircunferenciasConBorde()
     // COMPO.bordesEntornoInfinitos(COMPO.entorno)
-    // COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
-    COMPO.cuerpos.forEach(cuerpo => cuerpo.velocidad = Vector.escalar(cuerpo.velocidad, 0.95))
-    COMPO.moverCuerpos()
-    Quad.colisionCuerpos()
+    COMPO.cuerpos.forEach(cuerpo => cuerpo.velocidad = Vector.escalar(cuerpo.velocidad, 0.9))
+    Quad.contactoSimpleCuerpos()
     // console.log((Date.now() - tiempoActual))
-    console.log((Date.now() - tiempoInicio) / contadorCalculos)
-    contadorCalculos++
-    if (contadorCalculos > 100) {
-        console.log('------------------------------------------')
-        contadorCalculos = 1
-        tiempoInicio = Date.now()
-    }
+    // console.log((Date.now() - tiempoInicio) / contadorCalculos)
+    // contadorCalculos++
+    // if (contadorCalculos > 25) {
+    //     console.log('------------------------------------------')
+    //     contadorCalculos = 1
+    //     tiempoInicio = Date.now()
+    // }
 }, () => {
     RENDER.limpiarCanvas();
     COMPO.renderizarCuerpos();

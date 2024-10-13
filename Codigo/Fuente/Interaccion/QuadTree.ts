@@ -12,69 +12,60 @@ import { Interaccion } from "./Interaccion.js";
 
 
 export class QuadTree {
-    subDividido: boolean = false;
-    puntos: Punto[] = [];
     x: number;
     y: number;
     ancho: number;
     alto: number;
     capacidad: number;
     capacidadEspecifica: number;
-    subDivisiones: QuadTree[] = [];
+    puntos: Punto[] = [];
+    private idPunto: number = 1;
+    private subDividido: boolean = false;
+    private subDivisiones: QuadTree[] = [];
+    private niveles: number;
+    longitudMinima: number;
+    private longitudMenor: number;
     contorno: Forma;
-    identificador: number = 1;
-    longitudMaxima: number;
-    longitudMenor: number;
-    constructor(x: number, y: number, ancho: number, alto: number, capacidad: number = 4, longitudMaxima: number = 1) {
+    constructor(x: number, y: number, ancho: number, alto: number, capacidad: number = 4, niveles: number = 7) {
         this.x = x;
         this.y = y;
         this.ancho = ancho;
         this.alto = alto;
         this.capacidad = capacidad;
         this.capacidadEspecifica = capacidad;
-        this.longitudMaxima = longitudMaxima;
         this.longitudMenor = this.ancho < this.alto ? this.ancho : this.alto;
+        this.niveles = niveles;
+        this.longitudMinima = Math.ceil(this.longitudMenor / (2 ** niveles));
         this.contorno = this.formaCuadrante();
     }
 
     /**Agrega un punto a un QuadTree. Si al agregar el punto se sobrepasa la capacidad del QuadTree, se subdivide en cuatro QuadTrees nuevos. */
     insertarPunto(punto: Punto, contenido?: Forma): boolean {
-        let puntoInsertado: Punto = contenido != undefined ? { x: punto.x, y: punto.y, contenido: contenido } : punto;
-        if (puntoInsertado.id == undefined) {
-            puntoInsertado.id = this.identificador;
-            this.identificador++
+        if (contenido != undefined && punto.contenido == undefined) punto.contenido = contenido;
+        if (punto.id == 0) {
+            punto.id = this.idPunto;
+            this.idPunto++
         }
-        if (this.comprobarInsercion(puntoInsertado)) {
-            if (this.buscarPuntoRepetido(puntoInsertado)) {
-                this.puntos.push(puntoInsertado)
+        if (this.validarInsercion(punto)) {
+            if (this.verificarPuntoRepetido(punto)) {
+                this.puntos.push(punto)
                 this.capacidadEspecifica++;
                 return true
             }
-            if (this.puntos.length < this.capacidadEspecifica || this.longitudMenor <= this.longitudMaxima) {
-                this.puntos.push(puntoInsertado)
+            if (this.puntos.length < this.capacidadEspecifica || this.longitudMenor <= this.longitudMinima) {
+                this.puntos.push(punto)
                 return true;
             }
             else {
                 if (!this.subDividido) {
-                    let quadSurEste: QuadTree = new QuadTree(this.x + this.ancho / 2, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad)
-                    let quadSurOeste: QuadTree = new QuadTree(this.x, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad)
-                    let quadNorOeste: QuadTree = new QuadTree(this.x, this.y, this.ancho / 2, this.alto / 2, this.capacidad)
-                    let quadNorEste: QuadTree = new QuadTree(this.x + this.ancho / 2, this.y, this.ancho / 2, this.alto / 2, this.capacidad)
-                    this.subDivisiones.push(quadSurEste, quadSurOeste, quadNorOeste, quadNorEste)
-                    this.puntos.forEach(puntoGuardado => {
-                        quadSurEste.insertarPunto(puntoGuardado);
-                        quadSurOeste.insertarPunto(puntoGuardado);
-                        quadNorOeste.insertarPunto(puntoGuardado);
-                        quadNorEste.insertarPunto(puntoGuardado);
-                    })
+                    this.crearSubdivisiones()
+                    this.puntos.forEach(puntoGuardado => this.insertarEnSubdivisiones(puntoGuardado))
+                    this.insertarEnSubdivisiones(punto)
                     this.subDividido = true;
                     return true
                 }
                 else {
-                    this.subDivisiones[0].insertarPunto(puntoInsertado)
-                    this.subDivisiones[1].insertarPunto(puntoInsertado)
-                    this.subDivisiones[2].insertarPunto(puntoInsertado)
-                    this.subDivisiones[3].insertarPunto(puntoInsertado)
+                    this.insertarEnSubdivisiones(punto)
                     return true;
                 }
             }
@@ -82,7 +73,19 @@ export class QuadTree {
         return false;
     }
 
-    private comprobarInsercion(punto: Punto): boolean {
+    private crearSubdivisiones() {
+        let quadSurEste: QuadTree = new QuadTree(this.x + this.ancho / 2, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad, this.niveles - 1)
+        let quadSurOeste: QuadTree = new QuadTree(this.x, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad, this.niveles - 1)
+        let quadNorOeste: QuadTree = new QuadTree(this.x, this.y, this.ancho / 2, this.alto / 2, this.capacidad, this.niveles - 1)
+        let quadNorEste: QuadTree = new QuadTree(this.x + this.ancho / 2, this.y, this.ancho / 2, this.alto / 2, this.capacidad, this.niveles - 1)
+        this.subDivisiones.push(quadSurEste, quadSurOeste, quadNorOeste, quadNorEste)
+    }
+
+    private insertarEnSubdivisiones(punto: Punto) {
+        this.subDivisiones.forEach(subdivision => subdivision.insertarPunto(punto))
+    }
+
+    private validarInsercion(punto: Punto): boolean {
         if (punto.contenido) {
             if ((punto.x + punto.contenido.radio >= this.x && punto.x - punto.contenido.radio <= this.x + this.ancho)
                 && (punto.y + punto.contenido.radio >= this.y && punto.y - punto.contenido.radio <= this.y + this.alto)) {
@@ -114,7 +117,7 @@ export class QuadTree {
         return Forma.rectangulo(centroX, centroY, this.ancho, this.alto)
     }
 
-    private buscarPuntoRepetido(punto: Punto): boolean {
+    private verificarPuntoRepetido(punto: Punto): boolean {
         let coincidencia: boolean = false;
         this.puntos.forEach((puntoGuardado) => {
             if (Matematica.compararNumeros(punto.x, puntoGuardado.x) && Matematica.compararNumeros(punto.y, puntoGuardado.y)) {
@@ -164,7 +167,7 @@ export class QuadTree {
         return PuntosDentroDelRango;
     }
 
-    colisionCuerpos(): void {
+    contactoSimpleCuerpos(): void {
         if (!this.subDividido) {
             if (this.puntos.length > 1) {
                 let cuerpos: Cuerpo[] = []
@@ -177,7 +180,7 @@ export class QuadTree {
             }
         }
         else {
-            this.subDivisiones.forEach(subdivision => subdivision.colisionCuerpos())
+            this.subDivisiones.forEach(subdivision => subdivision.contactoSimpleCuerpos())
         }
     }
 }
