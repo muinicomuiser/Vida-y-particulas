@@ -607,6 +607,208 @@
         }
     }
 
+    /**
+            =============================================
+                     * MÓDULO DE CUERPOS *
+            =============================================
+            Trabaja usando objetos de tipo Forma.
+
+            Crea cuerpos geométricos con masa y densidad.
+
+            Contiene métodos para mover según velocidad y aceleración.
+
+     */
+    //TAREAS
+    //Una propiedad que defina si es necesario actualizar la posición y la rotación.
+    //Un solo método para aplicar transformar y actualizar transformaciones
+    //Buscar un modo de anclar un vértice a otro vector. Así se puede acoplar un ala a otro cuerpo. Método anclar(vector)
+    /**MÓDULO DE CUERPOS
+     * Trabaja usando objetos de tipo Forma.
+     */
+    class Cuerpo extends Forma {
+        constructor() {
+            super();
+            this._velocidad = Vector.cero();
+            this._aceleracion = Vector.cero();
+            /**Determina si el cuerpo rotará o no según la dirección y sentido de su velocidad.*/
+            this.rotarSegunVelocidad = false;
+            /**Propiedad útil para determinar si un cuerpo será controlado por el usuario.*/
+            this.controlable = false;
+            /**Determina si un cuerpo se moverá o no producto de la interacción con otros cuerpos.*/
+            this.fijo = false;
+            this.masa = 1;
+            this.densidad = 1;
+            /**Propiedades para activar y desactivar acciones relacionadas con el control del movimiento de cuerpos por parte del usuario.*/
+            this.controles = {
+                arriba: false,
+                abajo: false,
+                izquierda: false,
+                derecha: false,
+                rotarIzquierda: false,
+                rotarDerecha: false,
+                rapidez: 1,
+                anguloRotacion: Geometria.PI_MEDIO / 30
+            };
+        }
+        /**Retorna una copia del vector velocidad.*/
+        get velocidad() {
+            return Vector.clonar(this._velocidad);
+        }
+        /**Retorna una copia del vector aceleración.*/
+        get aceleracion() {
+            return Vector.clonar(this._aceleracion);
+        }
+        get verticesTransformados() {
+            if (this.rotarSegunVelocidad == true) {
+                this.transformacionAnterior.rotacion = this._transformacion.rotacion;
+                this.rotacion = Vector.angulo(this._velocidad) - Vector.angulo(this._vertices[0]);
+                return super.verticesTransformados;
+            }
+            return super.verticesTransformados;
+        }
+        /**Modifica el vector velocidad.*/
+        set velocidad(velocidad) {
+            this._velocidad = Vector.clonar(velocidad);
+        }
+        /**Modifica el vector aceleración.*/
+        set aceleracion(aceleracion) {
+            this._aceleracion = Vector.clonar(aceleracion);
+        }
+        /**Retorna un cuerpo geométrico regular.
+         * El radio corresponde a la distancia entre el centro y cualquiera de sus vértices.*/
+        static poligono(x, y, lados, radio, opciones) {
+            let poliForma = super.poligono(x, y, lados, radio);
+            let poligono = Cuerpo.cuerpoSegunForma(poliForma);
+            if (opciones) {
+                poligono.aplicarOpciones(opciones);
+            }
+            return poligono;
+        }
+        /**Retorna un cuerpo geométrico regular.
+         * El radio corresponde a la distancia entre el centro y cualquiera de sus vértices.*/
+        static poligonoSegunVertices(vertices, opciones) {
+            let poliForma = super.poligonoSegunVertices(vertices);
+            let poligono = Cuerpo.cuerpoSegunForma(poliForma);
+            if (opciones) {
+                poligono.aplicarOpciones(opciones);
+            }
+            return poligono;
+        }
+        /**Retorna un cuerpo rectangular.*/
+        static rectangulo(x, y, base, altura, opciones) {
+            let rectForma = super.rectangulo(x, y, base, altura);
+            let rectangulo = Cuerpo.cuerpoSegunForma(rectForma);
+            if (opciones) {
+                rectangulo.aplicarOpciones(opciones);
+            }
+            return rectangulo;
+        }
+        /**Retorna un cuerpo con forma de circunferencia.*/
+        static circunferencia(x, y, radio, opciones) {
+            let circuloForma = super.circunferencia(x, y, radio);
+            let circunferencia = Cuerpo.cuerpoSegunForma(circuloForma);
+            if (opciones) {
+                circunferencia.aplicarOpciones(opciones);
+            }
+            return circunferencia;
+        }
+        /**Método auxiliar. Crea un cuerpo base a partir de una forma.*/
+        static cuerpoSegunForma(forma) {
+            let cuerpo = new Cuerpo();
+            cuerpo.vertices = forma.vertices;
+            cuerpo.transformacion = forma.transformacion;
+            cuerpo.lados = forma.lados;
+            cuerpo.radio = forma.radio;
+            cuerpo.tipo = forma.tipo;
+            return cuerpo;
+        }
+        /**Aplicación de la opciones definidas al crear un cuerpo nuevo.*/
+        aplicarOpciones(opciones) {
+            super.aplicarOpciones(opciones);
+            if (opciones.masa) {
+                this.masa = opciones.masa;
+            }
+            if (opciones.densidad) {
+                this.densidad = opciones.densidad;
+            }
+            if (opciones.fijo != undefined) {
+                this.fijo = opciones.fijo;
+            }
+            if (opciones.rotarSegunVelocidad != undefined) {
+                this.rotarSegunVelocidad = opciones.rotarSegunVelocidad;
+            }
+            if (opciones.controlable != undefined) {
+                this.controlable = opciones.controlable;
+            }
+        }
+        /**Retorna una copia del cuerpo como un cuerpo nuevo.*/
+        clonar() {
+            const formaClonada = super.clonar();
+            const cuerpoClonado = Cuerpo.cuerpoSegunForma(formaClonada);
+            cuerpoClonado.masa = this.masa;
+            cuerpoClonado.densidad = this.densidad;
+            cuerpoClonado.fijo = this.fijo;
+            cuerpoClonado.rotarSegunVelocidad = this.rotarSegunVelocidad;
+            cuerpoClonado.controlable = this.controlable;
+            return cuerpoClonado;
+        }
+        /**Suma la aceleración a la velocidad y la velocidad a la posición.*/
+        mover() {
+            if (!this.fijo) {
+                this._velocidad = Vector.suma(this._velocidad, this._aceleracion);
+                this.posicion = Vector.suma(this.posicion, this._velocidad);
+            }
+        }
+        /**Traza el vector velocidad del cuerpo a partir de su centro.*/
+        trazarVelocidad(dibujante) {
+            let vectorVelocidad = Vector.clonar(this._velocidad);
+            vectorVelocidad = Vector.escalar(Vector.normalizar(vectorVelocidad), this.radio);
+            vectorVelocidad.origen = this._transformacion.posicion;
+            dibujante.trazarVector(vectorVelocidad);
+        }
+        /**Aplica las transformaciones definidas para cada evento (de teclado, mouse u otro) sobre el cuerpo.*/
+        usarControles() {
+            if (this.controles.arriba) {
+                this.posicion = Vector.suma(this.posicion, Vector.escalar(Vector.normalizar(this.normales[0]), this.controles.rapidez));
+            }
+            if (this.controles.abajo) {
+                this.posicion = Vector.suma(this.posicion, Vector.escalar(Vector.normalizar(this.normales[0]), -this.controles.rapidez));
+            }
+            if (this.controles.izquierda) {
+                this.posicion = Vector.suma(this.posicion, Vector.izquierda(this.controles.rapidez));
+            }
+            if (this.controles.derecha) {
+                this.posicion = Vector.suma(this.posicion, Vector.derecha(this.controles.rapidez));
+            }
+            if (this.controles.rotarIzquierda) {
+                this.rotacion -= this.controles.anguloRotacion;
+            }
+            if (this.controles.rotarDerecha) {
+                this.rotacion += this.controles.anguloRotacion;
+            }
+        }
+    }
+
+    /**
+     * MÓDULO MATEMÁTICO EN ESPAÑOL
+     * Reducido. Contiene solo funciones útiles de números aleatorios.
+     */
+    class Matematica {
+        /**Retorna un número aleatorio entre dos números.*/
+        static aleatorio(min, max) {
+            let rango = max - min;
+            return (Math.random() * rango) + min;
+        }
+        /**Retorna un número aleatorio entero entre dos números, ambos incluídos.*/
+        static aleatorioEntero(min, max) {
+            let rango = 1 + max - min;
+            return Math.trunc((Math.random() * rango) + min);
+        }
+        static compararNumeros(numeroUno, numeroDos, epsilon = Number.EPSILON) {
+            return (Math.abs(numeroUno - numeroDos) < epsilon);
+        }
+    }
+
     //Momento lineal, movimiento acelerado, momento angular, energía cinética y potencial.
     class Cinematica {
         /**Retorna un vector velocidad de un cuerpo que colisiona con una superficie.*/
@@ -947,275 +1149,70 @@
     }
 
     /**
-     * MÓDULO MATEMÁTICO EN ESPAÑOL
-     * Reducido. Contiene solo funciones útiles de números aleatorios.
-     */
-    class Matematica {
-        /**Retorna un número aleatorio entre dos números.*/
-        static aleatorio(min, max) {
-            let rango = max - min;
-            return (Math.random() * rango) + min;
-        }
-        /**Retorna un número aleatorio entero entre dos números, ambos incluídos.*/
-        static aleatorioEntero(min, max) {
-            let rango = 1 + max - min;
-            return Math.trunc((Math.random() * rango) + min);
-        }
-        static compararNumeros(numeroUno, numeroDos, epsilon = Number.EPSILON) {
-            return (Math.abs(numeroUno - numeroDos) < epsilon);
-        }
-    }
-
-    /**
-            =============================================
-                     * MÓDULO DE CUERPOS *
-            =============================================
-            Trabaja usando objetos de tipo Forma.
-
-            Crea cuerpos geométricos con masa y densidad.
-
-            Contiene métodos para mover según velocidad y aceleración.
-
-     */
-    //TAREAS
-    //Una propiedad que defina si es necesario actualizar la posición y la rotación.
-    //Un solo método para aplicar transformar y actualizar transformaciones
-    //Buscar un modo de anclar un vértice a otro vector. Así se puede acoplar un ala a otro cuerpo. Método anclar(vector)
-    /**MÓDULO DE CUERPOS
-     * Trabaja usando objetos de tipo Forma.
-     */
-    class Cuerpo extends Forma {
-        constructor() {
-            super();
-            this._velocidad = Vector.cero();
-            this._aceleracion = Vector.cero();
-            /**Determina si el cuerpo rotará o no según la dirección y sentido de su velocidad.*/
-            this.rotarSegunVelocidad = false;
-            /**Propiedad útil para determinar si un cuerpo será controlado por el usuario.*/
-            this.controlable = false;
-            /**Determina si un cuerpo se moverá o no producto de la interacción con otros cuerpos.*/
-            this.fijo = false;
-            this.masa = 1;
-            this.densidad = 1;
-            /**Propiedades para activar y desactivar acciones relacionadas con el control del movimiento de cuerpos por parte del usuario.*/
-            this.controles = {
-                arriba: false,
-                abajo: false,
-                izquierda: false,
-                derecha: false,
-                rotarIzquierda: false,
-                rotarDerecha: false,
-                rapidez: 1,
-                anguloRotacion: Geometria.PI_MEDIO / 30
-            };
-        }
-        /**Retorna una copia del vector velocidad.*/
-        get velocidad() {
-            return Vector.clonar(this._velocidad);
-        }
-        /**Retorna una copia del vector aceleración.*/
-        get aceleracion() {
-            return Vector.clonar(this._aceleracion);
-        }
-        get verticesTransformados() {
-            if (this.rotarSegunVelocidad == true) {
-                this.transformacionAnterior.rotacion = this._transformacion.rotacion;
-                this.rotacion = Vector.angulo(this._velocidad) - Vector.angulo(this._vertices[0]);
-                return super.verticesTransformados;
-            }
-            return super.verticesTransformados;
-        }
-        /**Modifica el vector velocidad.*/
-        set velocidad(velocidad) {
-            this._velocidad = Vector.clonar(velocidad);
-        }
-        /**Modifica el vector aceleración.*/
-        set aceleracion(aceleracion) {
-            this._aceleracion = Vector.clonar(aceleracion);
-        }
-        /**Retorna un cuerpo geométrico regular.
-         * El radio corresponde a la distancia entre el centro y cualquiera de sus vértices.*/
-        static poligono(x, y, lados, radio, opciones) {
-            let poliForma = super.poligono(x, y, lados, radio);
-            let poligono = Cuerpo.cuerpoSegunForma(poliForma);
-            if (opciones) {
-                poligono.aplicarOpciones(opciones);
-            }
-            return poligono;
-        }
-        /**Retorna un cuerpo geométrico regular.
-         * El radio corresponde a la distancia entre el centro y cualquiera de sus vértices.*/
-        static poligonoSegunVertices(vertices, opciones) {
-            let poliForma = super.poligonoSegunVertices(vertices);
-            let poligono = Cuerpo.cuerpoSegunForma(poliForma);
-            if (opciones) {
-                poligono.aplicarOpciones(opciones);
-            }
-            return poligono;
-        }
-        /**Retorna un cuerpo rectangular.*/
-        static rectangulo(x, y, base, altura, opciones) {
-            let rectForma = super.rectangulo(x, y, base, altura);
-            let rectangulo = Cuerpo.cuerpoSegunForma(rectForma);
-            if (opciones) {
-                rectangulo.aplicarOpciones(opciones);
-            }
-            return rectangulo;
-        }
-        /**Retorna un cuerpo con forma de circunferencia.*/
-        static circunferencia(x, y, radio, opciones) {
-            let circuloForma = super.circunferencia(x, y, radio);
-            let circunferencia = Cuerpo.cuerpoSegunForma(circuloForma);
-            if (opciones) {
-                circunferencia.aplicarOpciones(opciones);
-            }
-            return circunferencia;
-        }
-        /**Método auxiliar. Crea un cuerpo base a partir de una forma.*/
-        static cuerpoSegunForma(forma) {
-            let cuerpo = new Cuerpo();
-            cuerpo.vertices = forma.vertices;
-            cuerpo.transformacion = forma.transformacion;
-            cuerpo.lados = forma.lados;
-            cuerpo.radio = forma.radio;
-            cuerpo.tipo = forma.tipo;
-            return cuerpo;
-        }
-        /**Aplicación de la opciones definidas al crear un cuerpo nuevo.*/
-        aplicarOpciones(opciones) {
-            super.aplicarOpciones(opciones);
-            if (opciones.masa) {
-                this.masa = opciones.masa;
-            }
-            if (opciones.densidad) {
-                this.densidad = opciones.densidad;
-            }
-            if (opciones.fijo != undefined) {
-                this.fijo = opciones.fijo;
-            }
-            if (opciones.rotarSegunVelocidad != undefined) {
-                this.rotarSegunVelocidad = opciones.rotarSegunVelocidad;
-            }
-            if (opciones.controlable != undefined) {
-                this.controlable = opciones.controlable;
-            }
-        }
-        /**Retorna una copia del cuerpo como un cuerpo nuevo.*/
-        clonar() {
-            const formaClonada = super.clonar();
-            const cuerpoClonado = Cuerpo.cuerpoSegunForma(formaClonada);
-            cuerpoClonado.masa = this.masa;
-            cuerpoClonado.densidad = this.densidad;
-            cuerpoClonado.fijo = this.fijo;
-            cuerpoClonado.rotarSegunVelocidad = this.rotarSegunVelocidad;
-            cuerpoClonado.controlable = this.controlable;
-            return cuerpoClonado;
-        }
-        /**Suma la aceleración a la velocidad y la velocidad a la posición.*/
-        mover() {
-            if (!this.fijo) {
-                this._velocidad = Vector.suma(this._velocidad, this._aceleracion);
-                this.posicion = Vector.suma(this.posicion, this._velocidad);
-            }
-        }
-        /**Traza el vector velocidad del cuerpo a partir de su centro.*/
-        trazarVelocidad(dibujante) {
-            let vectorVelocidad = Vector.clonar(this._velocidad);
-            vectorVelocidad = Vector.escalar(Vector.normalizar(vectorVelocidad), this.radio);
-            vectorVelocidad.origen = this._transformacion.posicion;
-            dibujante.trazarVector(vectorVelocidad);
-        }
-        /**Aplica las transformaciones definidas para cada evento (de teclado, mouse u otro) sobre el cuerpo.*/
-        usarControles() {
-            if (this.controles.arriba) {
-                this.posicion = Vector.suma(this.posicion, Vector.escalar(Vector.normalizar(this.normales[0]), this.controles.rapidez));
-            }
-            if (this.controles.abajo) {
-                this.posicion = Vector.suma(this.posicion, Vector.escalar(Vector.normalizar(this.normales[0]), -this.controles.rapidez));
-            }
-            if (this.controles.izquierda) {
-                this.posicion = Vector.suma(this.posicion, Vector.izquierda(this.controles.rapidez));
-            }
-            if (this.controles.derecha) {
-                this.posicion = Vector.suma(this.posicion, Vector.derecha(this.controles.rapidez));
-            }
-            if (this.controles.rotarIzquierda) {
-                this.rotacion -= this.controles.anguloRotacion;
-            }
-            if (this.controles.rotarDerecha) {
-                this.rotacion += this.controles.anguloRotacion;
-            }
-        }
-    }
-
-    /**
      * Inicio Quadtree
      */
     class QuadTree {
-        constructor(x, y, ancho, alto, capacidad = 4) {
-            this.subDividido = false;
+        constructor(x, y, ancho, alto, capacidad = 4, niveles = 7) {
             this.puntos = [];
-            this.puntosRepetidos = [];
+            this.idPunto = 1;
+            this.subDividido = false;
             this.subDivisiones = [];
-            this.identificador = 1;
             this.x = x;
             this.y = y;
             this.ancho = ancho;
             this.alto = alto;
             this.capacidad = capacidad;
+            this.capacidadEspecifica = capacidad;
+            this.longitudMenor = this.ancho < this.alto ? this.ancho : this.alto;
+            this.niveles = niveles;
+            this.longitudMinima = Math.ceil(this.longitudMenor / (Math.pow(2, niveles)));
             this.contorno = this.formaCuadrante();
         }
         /**Agrega un punto a un QuadTree. Si al agregar el punto se sobrepasa la capacidad del QuadTree, se subdivide en cuatro QuadTrees nuevos. */
         insertarPunto(punto, contenido) {
-            let puntoInsertado = contenido != undefined ? { x: punto.x, y: punto.y, contenido: contenido } : punto;
-            if (puntoInsertado.id == undefined) {
-                puntoInsertado.id = this.identificador;
-                this.identificador++;
+            if (contenido != undefined && punto.contenido == undefined)
+                punto.contenido = contenido;
+            if (punto.id == 0) {
+                punto.id = this.idPunto;
+                this.idPunto++;
             }
-            if (this.comprobarInsercion(puntoInsertado)) {
-                if (this.buscarPuntoRepetido(puntoInsertado)) {
-                    console.log('Repetido');
+            if (this.validarInsercion(punto)) {
+                if (this.verificarPuntoRepetido(punto)) {
+                    this.puntos.push(punto);
+                    this.capacidadEspecifica++;
                     return true;
-                    // this.puntosRepetidos.push(puntoInsertado)
                 }
-                if (this.puntos.length < this.capacidad) {
-                    this.puntos.push(puntoInsertado);
+                if (this.puntos.length < this.capacidadEspecifica || this.longitudMenor <= this.longitudMinima) {
+                    this.puntos.push(punto);
                     return true;
                 }
                 else {
                     if (!this.subDividido) {
-                        let quadSurEste = new QuadTree(this.x + this.ancho / 2, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad);
-                        let quadSurOeste = new QuadTree(this.x, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad);
-                        let quadNorOeste = new QuadTree(this.x, this.y, this.ancho / 2, this.alto / 2, this.capacidad);
-                        let quadNorEste = new QuadTree(this.x + this.ancho / 2, this.y, this.ancho / 2, this.alto / 2, this.capacidad);
-                        this.subDivisiones.push(quadSurEste, quadSurOeste, quadNorOeste, quadNorEste);
-                        this.puntos.forEach(puntoGuardado => {
-                            quadSurEste.insertarPunto(puntoGuardado);
-                            quadSurOeste.insertarPunto(puntoGuardado);
-                            quadNorOeste.insertarPunto(puntoGuardado);
-                            quadNorEste.insertarPunto(puntoGuardado);
-                        });
-                        // this.puntosRepetidos.forEach(puntoGuardado => {
-                        //     quadSurEste.insertarPunto(puntoGuardado);
-                        //     quadSurOeste.insertarPunto(puntoGuardado);
-                        //     quadNorOeste.insertarPunto(puntoGuardado);
-                        //     quadNorEste.insertarPunto(puntoGuardado);
-                        // })
+                        this.crearSubdivisiones();
+                        this.puntos.forEach(puntoGuardado => this.insertarEnSubdivisiones(puntoGuardado));
+                        this.insertarEnSubdivisiones(punto);
                         this.subDividido = true;
                         return true;
                     }
                     else {
-                        this.subDivisiones[0].insertarPunto(puntoInsertado);
-                        this.subDivisiones[1].insertarPunto(puntoInsertado);
-                        this.subDivisiones[2].insertarPunto(puntoInsertado);
-                        this.subDivisiones[3].insertarPunto(puntoInsertado);
+                        this.insertarEnSubdivisiones(punto);
                         return true;
                     }
                 }
             }
             return false;
         }
-        comprobarInsercion(punto) {
+        crearSubdivisiones() {
+            let quadSurEste = new QuadTree(this.x + this.ancho / 2, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad, this.niveles - 1);
+            let quadSurOeste = new QuadTree(this.x, this.y + this.alto / 2, this.ancho / 2, this.alto / 2, this.capacidad, this.niveles - 1);
+            let quadNorOeste = new QuadTree(this.x, this.y, this.ancho / 2, this.alto / 2, this.capacidad, this.niveles - 1);
+            let quadNorEste = new QuadTree(this.x + this.ancho / 2, this.y, this.ancho / 2, this.alto / 2, this.capacidad, this.niveles - 1);
+            this.subDivisiones.push(quadSurEste, quadSurOeste, quadNorOeste, quadNorEste);
+        }
+        insertarEnSubdivisiones(punto) {
+            this.subDivisiones.forEach(subdivision => subdivision.insertarPunto(punto));
+        }
+        validarInsercion(punto) {
             if (punto.contenido) {
                 if ((punto.x + punto.contenido.radio >= this.x && punto.x - punto.contenido.radio <= this.x + this.ancho)
                     && (punto.y + punto.contenido.radio >= this.y && punto.y - punto.contenido.radio <= this.y + this.alto)) {
@@ -1244,16 +1241,13 @@
             const centroY = this.y + (this.alto / 2);
             return Forma.rectangulo(centroX, centroY, this.ancho, this.alto);
         }
-        buscarPuntoRepetido(punto) {
+        verificarPuntoRepetido(punto) {
             let coincidencia = false;
             this.puntos.forEach((puntoGuardado) => {
                 if (Matematica.compararNumeros(punto.x, puntoGuardado.x) && Matematica.compararNumeros(punto.y, puntoGuardado.y)) {
-                    console.log('repetido');
                     coincidencia = true;
+                    return;
                 }
-                // if (punto.x == puntoGuardado.x && punto.y == puntoGuardado.y) {
-                //     coincidencia = true
-                // }
             });
             return coincidencia;
         }
@@ -1262,16 +1256,6 @@
             if (this.x <= limiteDerecha && this.x + this.ancho >= limiteIzquierda && this.y <= limiteInferior && this.y + this.alto >= limiteSuperior) {
                 if (this.x >= limiteIzquierda && this.x + this.ancho <= limiteDerecha && this.y >= limiteSuperior && this.y + this.alto <= limiteInferior) {
                     this.puntos.forEach(punto => {
-                        if (punto.id != undefined) {
-                            if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
-                                PuntosDentroDelRango.push(punto);
-                            }
-                        }
-                        else {
-                            PuntosDentroDelRango.push(punto);
-                        }
-                    });
-                    this.puntosRepetidos.forEach(punto => {
                         if (punto.id != undefined) {
                             if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
                                 PuntosDentroDelRango.push(punto);
@@ -1295,31 +1279,16 @@
                             }
                         }
                     });
-                    this.puntosRepetidos.forEach(punto => {
-                        if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                            if (punto.id != undefined) {
-                                if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
-                                    PuntosDentroDelRango.push(punto);
-                                }
-                            }
-                            else {
-                                PuntosDentroDelRango.push(punto);
-                            }
-                        }
-                    });
                 }
                 if (this.subDivisiones.length > 0) {
                     this.subDivisiones.forEach(subdivision => {
                         subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, PuntosDentroDelRango);
-                        // PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
                     });
                 }
             }
             return PuntosDentroDelRango;
         }
-        // puntosEnRangoRadial(radio: number): Punto[] {
-        // }
-        colisionCuerpos() {
+        contactoSimpleCuerpos() {
             if (!this.subDividido) {
                 if (this.puntos.length > 1) {
                     let cuerpos = [];
@@ -1328,16 +1297,11 @@
                             cuerpos.push(punto.contenido);
                         }
                     });
-                    this.puntosRepetidos.forEach(punto => {
-                        if (punto.contenido instanceof Cuerpo) {
-                            cuerpos.push(punto.contenido);
-                        }
-                    });
                     Interaccion.contactoSimple(cuerpos);
                 }
             }
             else {
-                this.subDivisiones.forEach(subdivision => subdivision.colisionCuerpos());
+                this.subDivisiones.forEach(subdivision => subdivision.contactoSimpleCuerpos());
             }
         }
     }
@@ -2052,7 +2016,7 @@
 
     const COMPO = Composicion.crearConIDCanvas('canvas');
     const RENDER = COMPO.render;
-    COMPO.tamanoCanvas(600, 600);
+    COMPO.tamanoCanvas(500, 500);
     RENDER.colorCanvas = Renderizado.colorHSL(250, 50, 0);
     const ENTORNO = Entorno.crearEntornoCanvas(RENDER.canvas);
     //COLORES
@@ -2062,7 +2026,7 @@
     const RADIO_AMARILLAS = 3;
     const NUMERO_AMARILLAS = 400;
     const RADIO_ROJAS = 3;
-    const NUMERO_ROJAS = 120;
+    const NUMERO_ROJAS = 300;
     //PARTICULAS AMARILLAS
     let IdentificadorParticula = 1;
     const COLOR_AMARILLAS = ColorAmarillas;
@@ -2096,51 +2060,53 @@
     }
     //MAGNITUD INTERACCIONES
     const RojaRoja = 0.006;
-    const RojaAmarilla = 0.09;
-    const AmarilloAmarillo = 0.01;
+    const RojaAmarilla = 0.032;
+    const AmarilloAmarillo = 0.019;
     const AmarilloRojo = -0.02;
     //FUNCIONES INTERACCIONES
     const DISTANCIA_INTERACCION = 50;
-    const DISTANCIA_REPELER_MISMO_COLOR = 8;
-    const MAGNITUD_REPELER_MISMO_COLOR = 0.3;
-    const MAGNITUD_VELOCIDAD_MAXIMA = 0.8;
+    const DISTANCIA_REPELER = 8;
+    const MAGNITUD_REPELER = 0.5;
     //INTEGRACIÓN DE CUERPOS A COMPOSICIÓN
     COMPO.agregarCuerpos(...ParticulasRojas, ...ParticulasAmarillas);
     COMPO.entorno = ENTORNO;
     COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas, ...ParticulasAmarillas);
     //EJECUCIÓN DE INTERACCIONES
     function interaccionEnRango(particula, otraParticula) {
-        let magnitudInteraccion;
-        let mismoColor = false;
-        if (particula.id != otraParticula.id && Geometria.distanciaEntrePuntos(particula.posicion, otraParticula.posicion) < DISTANCIA_INTERACCION) {
-            if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_ROJAS) {
-                magnitudInteraccion = RojaRoja;
-                mismoColor = true;
-            }
-            else if (particula.colorRelleno == COLOR_AMARILLAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
-                magnitudInteraccion = AmarilloAmarillo;
-                mismoColor = true;
-            }
-            else if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
-                magnitudInteraccion = RojaAmarilla;
+        let interaccionEspecifica;
+        let distanciaEntreParticulas = Geometria.distanciaEntrePuntos(particula.posicion, otraParticula.posicion);
+        if (particula.id != otraParticula.id && distanciaEntreParticulas < DISTANCIA_INTERACCION) {
+            interaccionEspecifica = determinarInteraccion(particula, otraParticula);
+            if (distanciaEntreParticulas < DISTANCIA_REPELER) {
+                let repulsion = MAGNITUD_REPELER * ((DISTANCIA_REPELER - distanciaEntreParticulas) / DISTANCIA_REPELER);
+                let aceleracionCercana = Fuerza.repeler(particula, otraParticula, repulsion);
+                particula.aceleracion = Vector.suma(particula.aceleracion, aceleracionCercana);
             }
             else {
-                magnitudInteraccion = AmarilloRojo;
-            }
-            if (mismoColor) {
-                if (Geometria.distanciaEntrePuntos(particula.posicion, otraParticula.posicion) < DISTANCIA_REPELER_MISMO_COLOR) {
-                    let aceleracionCercana = Fuerza.repeler(particula, otraParticula, MAGNITUD_REPELER_MISMO_COLOR);
-                    particula.aceleracion = Vector.suma(particula.aceleracion, aceleracionCercana);
+                let magnitudInteraccion;
+                if (distanciaEntreParticulas < ((DISTANCIA_INTERACCION - DISTANCIA_REPELER) / 2 + DISTANCIA_REPELER)) {
+                    magnitudInteraccion = interaccionEspecifica * (distanciaEntreParticulas - DISTANCIA_REPELER) / (DISTANCIA_INTERACCION - DISTANCIA_REPELER);
                 }
                 else {
-                    let aceleracion = magnitudInteraccion > 0 ? Fuerza.atraer(particula, otraParticula, magnitudInteraccion) : Fuerza.repeler(particula, otraParticula, Math.abs(magnitudInteraccion));
-                    particula.aceleracion = Vector.suma(particula.aceleracion, aceleracion);
+                    magnitudInteraccion = interaccionEspecifica * (1 - (distanciaEntreParticulas - DISTANCIA_REPELER) / (DISTANCIA_INTERACCION - DISTANCIA_REPELER));
                 }
-            }
-            else {
-                let aceleracion = magnitudInteraccion > 0 ? Fuerza.atraer(particula, otraParticula, magnitudInteraccion) : Fuerza.repeler(particula, otraParticula, Math.abs(magnitudInteraccion));
+                let aceleracion = Fuerza.atraer(particula, otraParticula, magnitudInteraccion);
                 particula.aceleracion = Vector.suma(particula.aceleracion, aceleracion);
             }
+        }
+    }
+    function determinarInteraccion(particula, otraParticula) {
+        if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_ROJAS) {
+            return RojaRoja;
+        }
+        else if (particula.colorRelleno == COLOR_AMARILLAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
+            return AmarilloAmarillo;
+        }
+        else if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
+            return RojaAmarilla;
+        }
+        else {
+            return AmarilloRojo;
         }
     }
     //NUEVO CUADRO
@@ -2149,11 +2115,11 @@
     COMPO.usarfpsNativos = true;
     //ANIMAR
     COMPO.animacion(() => {
-        // let tiempoActual: number = Date.now()
-        let Quad = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 10);
+        let Quad = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 10, 5);
         COMPO.cuerpos.forEach(cuerpo => Quad.insertarPunto(cuerpo.posicion, cuerpo));
         COMPO.cuerpos.forEach(cuerpo => {
             cuerpo.aceleracion = Vector.cero();
+            cuerpo.velocidad = Vector.suma(cuerpo.velocidad, Vector.crear(Matematica.aleatorio(-0.1, 0.1), Matematica.aleatorio(-0.1, 0.1)));
             let puntosEnRango = Quad.puntosEnRango(cuerpo.posicion.x - DISTANCIA_INTERACCION, cuerpo.posicion.x + DISTANCIA_INTERACCION, cuerpo.posicion.y - DISTANCIA_INTERACCION, cuerpo.posicion.y + DISTANCIA_INTERACCION);
             for (let punto of puntosEnRango) {
                 if (punto.contenido instanceof Cuerpo) {
@@ -2161,14 +2127,16 @@
                 }
             }
         });
-        Quad.colisionCuerpos();
-        COMPO.entorno.rebotarCircunferenciasConBorde();
-        COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA);
+        Quad.contactoSimpleCuerpos();
         COMPO.moverCuerpos();
+        COMPO.entorno.rebotarCircunferenciasConBorde();
+        // COMPO.bordesEntornoInfinitos(COMPO.entorno)
+        COMPO.cuerpos.forEach(cuerpo => cuerpo.velocidad = Vector.escalar(cuerpo.velocidad, 0.9));
+        Quad.contactoSimpleCuerpos();
         // console.log((Date.now() - tiempoActual))
         // console.log((Date.now() - tiempoInicio) / contadorCalculos)
         // contadorCalculos++
-        // if (contadorCalculos > 100) {
+        // if (contadorCalculos > 25) {
         //     console.log('------------------------------------------')
         //     contadorCalculos = 1
         //     tiempoInicio = Date.now()
