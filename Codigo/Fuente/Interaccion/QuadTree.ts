@@ -14,7 +14,6 @@ import { Interaccion } from "./Interaccion.js";
 export class QuadTree {
     subDividido: boolean = false;
     puntos: Punto[] = [];
-    puntosRepetidos: Punto[] = [];
     x: number;
     y: number;
     ancho: number;
@@ -24,13 +23,17 @@ export class QuadTree {
     subDivisiones: QuadTree[] = [];
     contorno: Forma;
     identificador: number = 1;
-    constructor(x: number, y: number, ancho: number, alto: number, capacidad: number = 4) {
+    longitudMaxima: number;
+    longitudMenor: number;
+    constructor(x: number, y: number, ancho: number, alto: number, capacidad: number = 4, longitudMaxima: number = 1) {
         this.x = x;
         this.y = y;
         this.ancho = ancho;
         this.alto = alto;
         this.capacidad = capacidad;
         this.capacidadEspecifica = capacidad;
+        this.longitudMaxima = longitudMaxima;
+        this.longitudMenor = this.ancho < this.alto ? this.ancho : this.alto;
         this.contorno = this.formaCuadrante();
     }
 
@@ -43,13 +46,11 @@ export class QuadTree {
         }
         if (this.comprobarInsercion(puntoInsertado)) {
             if (this.buscarPuntoRepetido(puntoInsertado)) {
-                console.log('Repetido')
                 this.puntos.push(puntoInsertado)
                 this.capacidadEspecifica++;
                 return true
-                // this.puntosRepetidos.push(puntoInsertado)
             }
-            if (this.puntos.length < this.capacidadEspecifica) {
+            if (this.puntos.length < this.capacidadEspecifica || this.longitudMenor <= this.longitudMaxima) {
                 this.puntos.push(puntoInsertado)
                 return true;
             }
@@ -66,12 +67,6 @@ export class QuadTree {
                         quadNorOeste.insertarPunto(puntoGuardado);
                         quadNorEste.insertarPunto(puntoGuardado);
                     })
-                    // this.puntosRepetidos.forEach(puntoGuardado => {
-                    //     quadSurEste.insertarPunto(puntoGuardado);
-                    //     quadSurOeste.insertarPunto(puntoGuardado);
-                    //     quadNorOeste.insertarPunto(puntoGuardado);
-                    //     quadNorEste.insertarPunto(puntoGuardado);
-                    // })
                     this.subDividido = true;
                     return true
                 }
@@ -87,7 +82,7 @@ export class QuadTree {
         return false;
     }
 
-    comprobarInsercion(punto: Punto): boolean {
+    private comprobarInsercion(punto: Punto): boolean {
         if (punto.contenido) {
             if ((punto.x + punto.contenido.radio >= this.x && punto.x - punto.contenido.radio <= this.x + this.ancho)
                 && (punto.y + punto.contenido.radio >= this.y && punto.y - punto.contenido.radio <= this.y + this.alto)) {
@@ -116,7 +111,6 @@ export class QuadTree {
     private formaCuadrante(): Forma {
         const centroX: number = this.x + (this.ancho / 2)
         const centroY: number = this.y + (this.alto / 2)
-
         return Forma.rectangulo(centroX, centroY, this.ancho, this.alto)
     }
 
@@ -124,12 +118,9 @@ export class QuadTree {
         let coincidencia: boolean = false;
         this.puntos.forEach((puntoGuardado) => {
             if (Matematica.compararNumeros(punto.x, puntoGuardado.x) && Matematica.compararNumeros(punto.y, puntoGuardado.y)) {
-                console.log('repetido')
-                coincidencia = true
+                coincidencia = true;
+                return;
             }
-            // if (punto.x == puntoGuardado.x && punto.y == puntoGuardado.y) {
-            //     coincidencia = true
-            // }
         })
         return coincidencia
     }
@@ -148,16 +139,6 @@ export class QuadTree {
                         PuntosDentroDelRango.push(punto)
                     }
                 })
-                // this.puntosRepetidos.forEach(punto => {
-                //     if (punto.id != undefined) {
-                //         if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
-                //             PuntosDentroDelRango.push(punto)
-                //         }
-                //     }
-                //     else {
-                //         PuntosDentroDelRango.push(punto)
-                //     }
-                // });
             }
             else {
                 this.puntos.forEach(punto => {
@@ -172,33 +153,16 @@ export class QuadTree {
                         }
                     }
                 })
-                // this.puntosRepetidos.forEach(punto => {
-                //     if (punto.x >= limiteIzquierda && punto.x <= limiteDerecha && punto.y >= limiteSuperior && punto.y <= limiteInferior) {
-                //         if (punto.id != undefined) {
-                //             if (PuntosDentroDelRango.findIndex(puntoEnRango => punto.id == puntoEnRango.id) < 0) {
-                //                 PuntosDentroDelRango.push(punto)
-                //             }
-                //         }
-                //         else {
-                //             PuntosDentroDelRango.push(punto)
-                //         }
-                //     }
-                // })
             }
 
             if (this.subDivisiones.length > 0) {
                 this.subDivisiones.forEach(subdivision => {
                     subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior, PuntosDentroDelRango)
-                    // PuntosDentroDelRango.push(...subdivision.puntosEnRango(limiteIzquierda, limiteDerecha, limiteSuperior, limiteInferior))
                 })
             }
         }
         return PuntosDentroDelRango;
     }
-
-    // puntosEnRangoRadial(radio: number): Punto[] {
-
-    // }
 
     colisionCuerpos(): void {
         if (!this.subDividido) {
@@ -209,11 +173,6 @@ export class QuadTree {
                         cuerpos.push(punto.contenido)
                     }
                 })
-                // this.puntosRepetidos.forEach(punto => {
-                //     if (punto.contenido instanceof Cuerpo) {
-                //         cuerpos.push(punto.contenido)
-                //     }
-                // })
                 Interaccion.contactoSimple(cuerpos)
             }
         }

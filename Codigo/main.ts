@@ -13,10 +13,10 @@ const ColorAmarillas: string = Renderizado.colorHSL(45, 90, 90)
 
 //PARTICULAS
 const RADIO_AMARILLAS: number = 4;
-const NUMERO_AMARILLAS: number = 400;
+const NUMERO_AMARILLAS: number = 300;
 
 const RADIO_ROJAS: number = 4;
-const NUMERO_ROJAS: number = 150;
+const NUMERO_ROJAS: number = 200;
 
 //PARTICULAS AMARILLAS
 let IdentificadorParticula: number = 1;
@@ -53,16 +53,16 @@ for (let i: number = 0; i < NUMERO_ROJAS; i++) {
 
 
 //MAGNITUD INTERACCIONES
-const RojaRoja: number = 0.0001;
-const RojaAmarilla: number = 0.002;
+const RojaRoja: number = -0.05;
+const RojaAmarilla: number = 0.02;
 
-const AmarilloAmarillo: number = 0.0008;
-const AmarilloRojo: number = -0.006;
+const AmarilloAmarillo: number = 0.008;
+const AmarilloRojo: number = -0.02;
 
 //FUNCIONES INTERACCIONES
-const DISTANCIA_INTERACCION: number = 100;
-const DISTANCIA_REPELER_MISMO_COLOR: number = 8;
-const MAGNITUD_REPELER_MISMO_COLOR: number = 0.3;
+const DISTANCIA_INTERACCION: number = 200;
+const DISTANCIA_REPELER: number = 12;
+const MAGNITUD_REPELER: number = 0.1;
 const MAGNITUD_VELOCIDAD_MAXIMA: number = 1;
 
 //INTEGRACIÓN DE CUERPOS A COMPOSICIÓN
@@ -73,40 +73,46 @@ COMPO.entorno.agregarCuerposContenidos(...ParticulasRojas, ...ParticulasAmarilla
 
 //EJECUCIÓN DE INTERACCIONES
 function interaccionEnRango(particula: Cuerpo, otraParticula: Cuerpo): void {
-    let magnitudInteraccion: number;
-    let mismoColor: boolean = false;
-    if (particula.id != otraParticula.id && Geometria.distanciaEntrePuntos(particula.posicion, otraParticula.posicion) < DISTANCIA_INTERACCION) {
-        if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_ROJAS) {
-            magnitudInteraccion = RojaRoja;
-            mismoColor = true;
-        }
-        else if (particula.colorRelleno == COLOR_AMARILLAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
-            magnitudInteraccion = AmarilloAmarillo;
-            mismoColor = true;
-        }
-        else if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
-            magnitudInteraccion = RojaAmarilla;
+    let interaccionEspecifica: number;
+    let distanciaEntreParticulas: number = Geometria.distanciaEntrePuntos(particula.posicion, otraParticula.posicion)
+    if (particula.id != otraParticula.id && distanciaEntreParticulas < DISTANCIA_INTERACCION) {
+        interaccionEspecifica = determinarInteraccion(particula, otraParticula)
+        if (distanciaEntreParticulas < DISTANCIA_REPELER) {
+            let repulsion: number = MAGNITUD_REPELER * ((DISTANCIA_REPELER - distanciaEntreParticulas) / DISTANCIA_REPELER)
+            let aceleracionCercana: Vector = Fuerza.repeler(particula, otraParticula, repulsion)
+            particula.aceleracion = Vector.suma(particula.aceleracion, aceleracionCercana)
         }
         else {
-            magnitudInteraccion = AmarilloRojo;
-
-        }
-        if (mismoColor) {
-            if (Geometria.distanciaEntrePuntos(particula.posicion, otraParticula.posicion) < DISTANCIA_REPELER_MISMO_COLOR) {
-                let aceleracionCercana: Vector = Fuerza.repeler(particula, otraParticula, MAGNITUD_REPELER_MISMO_COLOR)
-                particula.aceleracion = Vector.suma(particula.aceleracion, aceleracionCercana)
+            let magnitudInteraccion: number;
+            if (distanciaEntreParticulas < ((DISTANCIA_INTERACCION - DISTANCIA_REPELER) / 2 + DISTANCIA_REPELER)) {
+                magnitudInteraccion = interaccionEspecifica * (distanciaEntreParticulas - DISTANCIA_REPELER) / (DISTANCIA_INTERACCION - DISTANCIA_REPELER)
             }
             else {
-                let aceleracion: Vector = magnitudInteraccion > 0 ? Fuerza.atraer(particula, otraParticula, magnitudInteraccion) : Fuerza.repeler(particula, otraParticula, Math.abs(magnitudInteraccion))
-                particula.aceleracion = Vector.suma(particula.aceleracion, aceleracion)
+                magnitudInteraccion = interaccionEspecifica * (1 - (distanciaEntreParticulas - DISTANCIA_REPELER) / (DISTANCIA_INTERACCION - DISTANCIA_REPELER))
             }
-        }
-        else {
-            let aceleracion: Vector = magnitudInteraccion > 0 ? Fuerza.atraer(particula, otraParticula, magnitudInteraccion) : Fuerza.repeler(particula, otraParticula, Math.abs(magnitudInteraccion))
+            let aceleracion: Vector = Fuerza.atraer(particula, otraParticula, magnitudInteraccion);
             particula.aceleracion = Vector.suma(particula.aceleracion, aceleracion)
         }
     }
 }
+
+function determinarInteraccion(particula: Cuerpo, otraParticula: Cuerpo): number {
+    if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_ROJAS) {
+        return RojaRoja;
+    }
+    else if (particula.colorRelleno == COLOR_AMARILLAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
+        return AmarilloAmarillo;
+    }
+    else if (particula.colorRelleno == COLOR_ROJAS && otraParticula.colorRelleno == COLOR_AMARILLAS) {
+        return RojaAmarilla;
+    }
+    else {
+        return AmarilloRojo;
+    }
+}
+
+
+
 
 //NUEVO CUADRO
 COMPO.tick = 10;
@@ -120,11 +126,12 @@ let tiempoInicio: number = Date.now()
 //ANIMAR
 COMPO.animacion(() => {
     let tiempoActual: number = Date.now()
-    let Quad: QuadTree = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 10);
+    let Quad: QuadTree = new QuadTree(0, 0, RENDER.anchoCanvas, RENDER.altoCanvas, 8, 8);
     COMPO.cuerpos.forEach(cuerpo => Quad.insertarPunto(cuerpo.posicion, cuerpo));
     COMPO.cuerpos.forEach(cuerpo => {
         cuerpo.aceleracion = Vector.cero()
-        // cuerpo.aceleracion = Vector.escalar(cuerpo.aceleracion, 0.8)
+        // cuerpo.velocidad = Vector.suma(cuerpo.velocidad, Vector.crear(Matematica.aleatorio(-0.4, 0.4), Matematica.aleatorio(-0.4, 0.4)))
+        // cuerpo.aceleracion = Vector.escalar(cuerpo.aceleracion, 0.01)
         let puntosEnRango: Punto[] = Quad.puntosEnRango(cuerpo.posicion.x - DISTANCIA_INTERACCION, cuerpo.posicion.x + DISTANCIA_INTERACCION, cuerpo.posicion.y - DISTANCIA_INTERACCION, cuerpo.posicion.y + DISTANCIA_INTERACCION);
         for (let punto of puntosEnRango) {
             if (punto.contenido instanceof Cuerpo) {
@@ -132,20 +139,21 @@ COMPO.animacion(() => {
             }
         }
     })
-    Quad.colisionCuerpos()
+    // Quad.colisionCuerpos()
     COMPO.entorno.rebotarCircunferenciasConBorde()
     // COMPO.bordesEntornoInfinitos(COMPO.entorno)
-    COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
+    // COMPO.limitarVelocidad(MAGNITUD_VELOCIDAD_MAXIMA)
+    COMPO.cuerpos.forEach(cuerpo => cuerpo.velocidad = Vector.escalar(cuerpo.velocidad, 0.95))
     COMPO.moverCuerpos()
-    // Quad.colisionCuerpos()
-    console.log((Date.now() - tiempoActual))
-    // console.log((Date.now() - tiempoInicio) / contadorCalculos)
-    // contadorCalculos++
-    // if (contadorCalculos > 100) {
-    //     console.log('------------------------------------------')
-    //     contadorCalculos = 1
-    //     tiempoInicio = Date.now()
-    // }
+    Quad.colisionCuerpos()
+    // console.log((Date.now() - tiempoActual))
+    console.log((Date.now() - tiempoInicio) / contadorCalculos)
+    contadorCalculos++
+    if (contadorCalculos > 100) {
+        console.log('------------------------------------------')
+        contadorCalculos = 1
+        tiempoInicio = Date.now()
+    }
 }, () => {
     RENDER.limpiarCanvas();
     COMPO.renderizarCuerpos();
